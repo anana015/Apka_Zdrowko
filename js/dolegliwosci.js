@@ -7,6 +7,7 @@ import * as db from './db.js';
 import { $, h, toast, otworzDialog, pokazBlad, ustawRadio, wartoscRadia, dwaDotkniecia, uuid } from './utils.js';
 import { doDatetimeLocal, zDatetimeLocal, hhmm, ymd, czasNaDate, nazwaEpizodu, formatKrotki } from './obliczenia.js';
 import { FLAGI, sprawdzEpizod, OBSZARY_RODZAJU, NAZWY_OBSZAROW } from './flagi.js';
+import { TEMAT_RODZAJU } from './wiedza.js';
 import { pobierzTagi, dodajTag, budujChipy, zaznaczoneChipy, dolaczChip } from './tagi.js';
 
 export const OBJAWY = Object.freeze([
@@ -52,6 +53,7 @@ const LOKALIZACJE = {
   glowa: ['Czoło', 'Skronie', 'Potylica', 'Jedna strona głowy', 'Cała głowa', 'Za okiem'],
   kregoslup: ['Odcinek szyjny', 'Między łopatkami', 'Odcinek lędźwiowy (dół pleców)', 'Kość krzyżowa', 'Promieniuje do nogi'],
   intymne: ['Podbrzusze', 'Prawa strona podbrzusza', 'Lewa strona podbrzusza', 'Krocze', 'Okolica pochwy lub sromu', 'Jądro'],
+  opryszczka: ['Warga górna', 'Warga dolna', 'Kącik ust', 'Okolica nosa', 'Narządy płciowe', 'Pośladki lub uda'],
 };
 
 /** Pokazuje pole nazwy, objawy alarmowe i podpowiedzi lokalizacji pasujące do rodzaju dolegliwości. */
@@ -62,6 +64,10 @@ function pokazPoleNazwy() {
   for (const g of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('#ep-alarmowe [data-obszar]'))) {
     g.hidden = !obszary.includes(/** @type {string} */ (g.dataset.obszar));
   }
+  const temat = TEMAT_RODZAJU[/** @type {keyof typeof TEMAT_RODZAJU} */ (rodzaj)];
+  const link = /** @type {HTMLAnchorElement} */ ($('#ep-wiedza-link'));
+  link.hidden = !temat;
+  link.href = temat ? `#wiedza?temat=${temat}` : '#wiedza';
   $('#lista-lokalizacji').replaceChildren(...obszary.flatMap((o) => LOKALIZACJE[/** @type {keyof typeof LOKALIZACJE} */ (o)] ?? []).map((l) => h('option', { value: l })));
 }
 
@@ -77,7 +83,7 @@ export function zainicjujEpizody() {
     h('input', { type: 'checkbox', name: 'objawy', value: o.id }), h('span', { text: o.etykieta }))));
   const opcja = (/** @type {typeof FLAGI[number]} */ f) => h('label', { class: 'opcja' },
     h('input', { type: 'checkbox', name: 'alarmowe', value: f.id }), h('span', { text: f.etykieta }));
-  $('#ep-alarmowe').replaceChildren(...(/** @type {const} */ (['glowa', 'kregoslup', 'intymne'])).map((obszar) => h('div', { class: 'grupa-alarmowa', 'data-obszar': obszar },
+  $('#ep-alarmowe').replaceChildren(...(/** @type {const} */ (['glowa', 'kregoslup', 'intymne', 'opryszczka'])).map((obszar) => h('div', { class: 'grupa-alarmowa', 'data-obszar': obszar },
     h('h3', { text: NAZWY_OBSZAROW[obszar] }),
     h('div', { class: 'wybor-pionowy' }, FLAGI.filter((f) => f.wEpizodzie && f.obszar === obszar).map(opcja)))));
 
@@ -141,6 +147,7 @@ export async function otworzEpizod(id, { data } = {}) {
   for (const c of /** @type {NodeListOf<HTMLInputElement>} */ (form.querySelectorAll('input[name="objawy"], input[name="alarmowe"]'))) {
     c.checked = (ep?.features ?? []).includes(c.value);
   }
+  /** @type {HTMLDetailsElement} */ ($('#ep-alarmowe-blok')).open = Boolean(form.querySelector('input[name="alarmowe"]:checked'));
   budujChipy($('#ep-czynniki'), 'czynniki', await pobierzTagi(), ep?.triggers ?? []);
   ustawRadio(form, 'relief', ep?.relief ?? '');
   /** @type {HTMLTextAreaElement} */ ($('#ep-notatka')).value = ep?.note ?? '';
@@ -222,7 +229,7 @@ async function zapisz() {
   dialog().close();
   if (sprawdzEpizod(/** @type {any} */ (zapisany)).length) {
     window.scrollTo({ top: 0 });
-    toast('Zapisano. Sprawdź komunikat na górze ekranu.');
+    toast('Zapisano. Na górze ekranu jest podpowiedź, gdzie szukać pomocy.');
   } else {
     toast('Zapisano dolegliwość.');
   }

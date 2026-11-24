@@ -63,6 +63,15 @@ function poZmianieDanych() {
 }
 
 let ostatnieFlagi = '';
+const KLUCZ_UKRYTYCH = 'dziennik:ukryteFlagi';
+const czytajUkryte = () => { try { return localStorage.getItem(KLUCZ_UKRYTYCH) ?? ''; } catch { return ''; } };
+const zapiszUkryte = (/** @type {string} */ k) => { try { localStorage.setItem(KLUCZ_UKRYTYCH, k); } catch { /* tryb prywatny */ } };
+
+/**
+ * Podpowiedź na górze ekranu, gdy wpisy z ostatnich 48 h zawierają objawy do skonsultowania.
+ * Ton spokojny: informacja, gdzie szukać pomocy, bez straszenia. Można ją ukryć do czasu,
+ * aż zmieni się zestaw wykrytych objawów.
+ */
 async function odswiezFlagi() {
   const { wpisy, epizody } = await db.wczytajWszystko();
   const wynik = aktywneFlagi({ wpisy, epizody });
@@ -70,41 +79,43 @@ async function odswiezFlagi() {
   if (klucz === ostatnieFlagi) return;
   ostatnieFlagi = klucz;
   const baner = $('#baner-flag');
-  if (!wynik.flagi.length) { baner.hidden = true; baner.replaceChildren(); return; }
+  if (!wynik.flagi.length || klucz === czytajUkryte()) { baner.hidden = true; baner.replaceChildren(); return; }
 
   const tel = (/** @type {{numer: string}} */ n, /** @type {string} */ etykieta, drugorzedny = false) => h('a', {
-    class: `btn ${drugorzedny ? 'btn-drugorzedny' : ''}`, href: `tel:${n.numer.replace(/\s/g, '')}`,
+    class: `btn btn-maly ${drugorzedny ? 'btn-drugorzedny' : ''}`, href: `tel:${n.numer.replace(/\s/g, '')}`,
   }, ikona('tel'), etykieta);
 
   const tylkoLekarz = !wynik.pilne && !wynik.kryzys;
-  const tresc = h('div', { class: `baner-flag__tresc${tylkoLekarz ? ' baner-flag__tresc--lekarz' : ''}`, role: 'alert' });
-  if (tylkoLekarz) {
-    tresc.append(
-      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Skontaktuj się jeszcze dziś z lekarzem' })),
-      h('p', { text: 'W dzień: przychodnia POZ (także teleporada). Wieczorem, w nocy i w święta: nocna i świąteczna opieka zdrowotna. Jeśli objawy się nasilą, dzwoń pod 112.' }),
-    );
-  }
+  const tresc = h('div', { class: `baner-flag__tresc${tylkoLekarz ? ' baner-flag__tresc--lekarz' : ''}`, role: wynik.pilne ? 'alert' : 'status' });
   if (wynik.pilne) {
     tresc.append(
-      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Zadzwoń pod 112 albo jedź na SOR' })),
-      h('p', { text: 'Nie prowadź samochodu samodzielnie: poproś kogoś o podwiezienie albo wezwij karetkę.' }),
+      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Te objawy warto pilnie sprawdzić' })),
+      h('p', { text: 'Jeśli występują teraz albo się nasilają: 112 lub SOR.' }),
+    );
+  } else if (tylkoLekarz) {
+    tresc.append(
+      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Warto skonsultować to z lekarzem' })),
+      h('p', { text: 'Najlepiej w najbliższym czasie: POZ lub teleporada, a wieczorem i w święta nocna i świąteczna opieka.' }),
     );
   }
   if (wynik.kryzys) {
     tresc.append(
-      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Jeśli masz myśli o odebraniu sobie życia, porozmawiaj z kimś teraz' })),
-      h('p', { text: 'Rozmowa jest bezpłatna. Możesz zadzwonić także wtedy, gdy nie wiesz, co powiedzieć.' }),
+      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Jeśli jest Ci bardzo ciężko, porozmawiaj z kimś' })),
+      h('p', { text: 'Rozmowa jest bezpłatna i możesz zadzwonić także wtedy, gdy nie wiesz, co powiedzieć.' }),
     );
   }
+  const ukryj = h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Ukryj' });
+  ukryj.addEventListener('click', () => { zapiszUkryte(klucz); baner.hidden = true; });
   tresc.append(
     h('ul', {}, wynik.flagi.map((f) => h('li', { text: f.etykieta }))),
     h('div', { class: 'przyciski' },
-      tel(NUMERY.alarmowy, 'Zadzwoń pod 112', tylkoLekarz),
+      wynik.pilne ? tel(NUMERY.alarmowy, 'Zadzwoń pod 112') : null,
       wynik.kryzys ? tel(NUMERY.centrumWsparcia, `Centrum Wsparcia ${NUMERY.centrumWsparcia.numer}`, true) : null,
       wynik.kryzys ? tel(NUMERY.telefonZaufania, `Telefon zaufania ${NUMERY.telefonZaufania.numer}`, true) : null,
+      h('a', { class: 'btn btn-drugorzedny btn-maly', href: '#wiedza', text: 'Co to może być' }),
+      ukryj,
     ),
-    h('p', { class: 'drobny' }, 'Baner pojawia się na podstawie Twoich wpisów z ostatnich 48 godzin. To pomoc, nie gwarancja: jeśli dzieje się coś niepokojącego, dzwoń niezależnie od tego, co pokazuje aplikacja. ',
-      h('a', { href: '#wiedza', text: 'Kiedy szukać pomocy' })),
+    h('p', { class: 'drobny', text: 'Na podstawie Twoich wpisów z ostatnich 48 godzin.' }),
   );
   baner.replaceChildren(tresc);
   baner.hidden = false;

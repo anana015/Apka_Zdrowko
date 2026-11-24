@@ -220,7 +220,7 @@
           <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dodaj-epizod">Dodaj dolegliwość</button>
         </div>
         <ul class="lista" id="dzis-epizody"></ul>
-        <p class="drobny"><a href="#wiedza">Kiedy szukać pomocy: ból głowy, kręgosłupa, okolic intymnych</a></p>
+        <p class="drobny"><a href="#wiedza">Wiedza: co to może być, co pomaga, popularne leki</a></p>
       </section>
     </section>
 
@@ -300,7 +300,7 @@
         <h1 id="leki-tytul" tabindex="-1">Leki i suplementy</h1>
         <button type="button" class="btn btn-glowny btn-maly" id="leki-dodaj">Dodaj</button>
       </div>
-      <p class="drobny">Aplikacja nie zawiera bazy leków ani informacji o interakcjach. Dawki wpisuj zgodnie z zaleceniem lekarza lub ulotką.</p>
+      <p class="drobny">Dawki wpisuj zgodnie z zaleceniem lekarza lub ulotką. <a href="#wiedza?temat=leki">Ściąga popularnych leków</a></p>
       <ul class="lista" id="leki-lista"></ul>
 
       <section class="sekcja" aria-labelledby="rejestr-tytul">
@@ -361,7 +361,7 @@
 
     <!-- ===== KIEDY SZUKAĆ POMOCY ===== -->
     <section class="ekran" id="ekran-wiedza" data-ekran="wiedza" aria-labelledby="wiedza-tytul" hidden>
-      <h1 id="wiedza-tytul" tabindex="-1">Kiedy szukać pomocy</h1>
+      <h1 id="wiedza-tytul" tabindex="-1">Wiedza</h1>
       <div id="wiedza-tresc"></div>
     </section>
 
@@ -419,8 +419,8 @@
       </section>
 
       <section class="sekcja" aria-labelledby="pomoc-tytul">
-        <h2 id="pomoc-tytul">Kiedy szukać pomocy</h2>
-        <p><a href="#wiedza">Objawy alarmowe i informacje o bólu głowy, kręgosłupa i okolic intymnych</a></p>
+        <h2 id="pomoc-tytul">Wiedza o zdrowiu</h2>
+        <p><a href="#wiedza">Ból głowy, kręgosłupa, okolic intymnych, opryszczka i ściąga popularnych leków</a></p>
       </section>
 
       <section class="sekcja" aria-labelledby="przypomnienia-tytul">
@@ -522,6 +522,7 @@
           <label class="opcja"><input type="radio" name="kind" value="migraine"><span>Migrena <span class="opcjonalne">(Twoja etykieta, nie rozpoznanie)</span></span></label>
           <label class="opcja"><input type="radio" name="kind" value="back"><span>Ból kręgosłupa</span></label>
           <label class="opcja"><input type="radio" name="kind" value="pelvic"><span>Ból w okolicy intymnej lub podbrzusza</span></label>
+          <label class="opcja"><input type="radio" name="kind" value="herpes"><span>Opryszczka</span></label>
           <label class="opcja"><input type="radio" name="kind" value="other"><span>Inna dolegliwość</span></label>
         </div>
       </fieldset>
@@ -561,11 +562,13 @@
         <div class="chipy" id="ep-objawy"></div>
       </fieldset>
 
-      <fieldset class="pole pole--alarm">
-        <legend>Objawy wymagające pilnej pomocy</legend>
-        <p class="drobny">Zaznacz, jeśli coś z tego występuje. Aplikacja pokaże wtedy, gdzie szukać pomocy. <a href="#wiedza" data-zamknij>Więcej o objawach alarmowych</a></p>
+      <p class="drobny ep-wiedza"><a id="ep-wiedza-link" href="#wiedza" data-zamknij>Co to może być i co pomaga</a></p>
+
+      <details class="pole pole--uwaga" id="ep-alarmowe-blok">
+        <summary>Objawy, które warto skonsultować z lekarzem</summary>
+        <p class="drobny">Zaznacz, jeśli coś z tego występuje: aplikacja podpowie, gdzie szukać pomocy.</p>
         <div id="ep-alarmowe"></div>
-      </fieldset>
+      </details>
 
       <fieldset class="pole">
         <legend>Możliwe czynniki</legend>

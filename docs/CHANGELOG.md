@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 (2026-11-24) — wiedza, ściąga leków, opryszczka
+**Najpierw uruchom migrację `0005_opryszczka.sql` w SQL Editorze.**
+- Ekran „Wiedza”: przy każdym obszarze „Co to może być” (rozwijane karty: jak to zwykle wygląda, co może pomóc, jakie leki, kiedy do lekarza). Ból głowy: napięciowy, migrena, klasterowy, z nadużywania leków. Kręgosłup: zwykły ból pleców, rwa kulszowa, kark. Okolice intymne: zapalenie pęcherza, bolesne miesiączki, drożdżyca, opryszczka, jelita.
+- Nowy temat „Opryszczka” (wargowa i narządów płciowych) i nowy rodzaj dolegliwości z lokalizacjami i 4 objawami do konsultacji (lista objawów 1.1.0).
+- Ściąga 11 popularnych leków: na co, typowa dawka u dorosłych, najważniejsze uwagi, źródło, link do Rejestru Produktów Leczniczych.
+- Spokojniejszy ton: baner „Warto skonsultować to z lekarzem” / „Te objawy warto pilnie sprawdzić”, przycisk „Ukryj” (wraca, gdy pojawią się inne objawy), mniej czerwieni. W formularzu objawy do konsultacji są zwinięte, a nad nimi link „Co to może być i co pomaga” dla wybranego rodzaju.
+
 ## 0.5.1 (2026-11-24) — sen z 14 dni
 - „Wklej sen” przyjmuje wiele fragmentów snu (skrót z 14 dni), łączy je w noce (przerwa do 2 h), przypisuje do dnia pobudki i uzupełnia wpisy; pozostałe pola wpisów zostają.
 - Nowa instrukcja skrótu „Dziennik sen” (pętla „Powtórz z każdym”).

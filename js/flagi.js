@@ -7,15 +7,15 @@
  * Nie zastępuje porady lekarza; warto pokazać ją swojemu lekarzowi. Przegląd: co najmniej raz w roku.
  *
  * Poziomy:
- *   'pilne'  — dzwoń pod 112 albo jedź na SOR (w Wielkiej Brytanii: „999 or A&E”),
+ *   'pilne'  — 112 albo SOR (w Wielkiej Brytanii: „999 or A&E”),
  *   'lekarz' — skontaktuj się z lekarzem jeszcze dziś (POZ, teleporada, nocna i świąteczna opieka),
  *   'kryzys' — myśli samobójcze: numery wsparcia i 112.
  */
 
-export const WERSJA_LISTY = '1.0.0 (24.11.2026)';
+export const WERSJA_LISTY = '1.1.0 (24.11.2026)';
 export const ZWERYFIKOWANO = true;
 
-/** @typedef {'glowa'|'kregoslup'|'intymne'|'ogolne'} Obszar */
+/** @typedef {'glowa'|'kregoslup'|'intymne'|'opryszczka'|'ogolne'} Obszar */
 /**
  * @typedef {{ id: string, etykieta: string, obszar: Obszar, typ: 'pilne'|'lekarz'|'kryzys', wEpizodzie: boolean, slowa: string[] }} Flaga
  */
@@ -109,6 +109,20 @@ export const FLAGI = Object.freeze([
     etykieta: 'Ciąża lub możliwa ciąża (np. spóźniony okres)',
     slowa: ['spozniony okres', 'moge byc w ciazy', 'jestem w ciazy', 'pozytywny test'] },
 
+  // ---------- Opryszczka (NHS: cold-sores, genital-herpes) ----------
+  { id: 'hsv_oko', obszar: 'opryszczka', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Zmiana blisko oka albo ból lub zaczerwienienie oka',
+    slowa: ['opryszczka przy oku', 'opryszczka na powiece', 'opryszczka oka'] },
+  { id: 'hsv_odpornosc', obszar: 'opryszczka', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Osłabiona odporność (np. chemioterapia, leki immunosupresyjne) albo ciąża',
+    slowa: [] },
+  { id: 'hsv_rozlegla', obszar: 'opryszczka', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Duże, bardzo bolesne lub szerzące się zmiany, wysoka gorączka',
+    slowa: [] },
+  { id: 'hsv_pierwszy_plciowe', obszar: 'opryszczka', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Pierwszy raz zmiany na narządach płciowych',
+    slowa: [] },
+
   // ---------- Ogólne ----------
   { id: 'kryzys_samobojcze', obszar: 'ogolne', typ: 'kryzys', wEpizodzie: false,
     etykieta: 'Myśli samobójcze',
@@ -121,10 +135,10 @@ export const FLAGA_NASILENIE_10 = Object.freeze({
 
 /** Które obszary flag pokazać w formularzu dolegliwości danego rodzaju. */
 export const OBSZARY_RODZAJU = Object.freeze({
-  headache: ['glowa'], migraine: ['glowa'], back: ['kregoslup'], pelvic: ['intymne'], other: ['glowa', 'kregoslup', 'intymne'],
+  headache: ['glowa'], migraine: ['glowa'], back: ['kregoslup'], pelvic: ['intymne'], herpes: ['opryszczka'], other: ['glowa', 'kregoslup', 'intymne'],
 });
 
-export const NAZWY_OBSZAROW = Object.freeze({ glowa: 'Ból głowy', kregoslup: 'Ból kręgosłupa', intymne: 'Okolice intymne i podbrzusze', ogolne: 'Ogólne' });
+export const NAZWY_OBSZAROW = Object.freeze({ glowa: 'Ból głowy', kregoslup: 'Ból kręgosłupa', intymne: 'Okolice intymne i podbrzusze', opryszczka: 'Opryszczka', ogolne: 'Ogólne' });
 
 /** Numery pomocy (sprawdzone na gov.pl, 23.11.2026). */
 export const NUMERY = Object.freeze({
