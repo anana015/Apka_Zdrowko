@@ -1,7 +1,7 @@
 # Nagłówki bezpieczeństwa dla Cloudflare Pages / Netlify.
-# Po podłączeniu Supabase dopisz adres projektu do connect-src (https://<projekt>.supabase.co).
+# Adres projektu Supabase dopisuje do connect-src i img-src skrypt: npm run ustaw-supabase (docs/konfiguracja.md, S5).
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://yklgotbmiwzubyvqxept.supabase.co; font-src 'self'; connect-src 'self' https://yklgotbmiwzubyvqxept.supabase.co; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
