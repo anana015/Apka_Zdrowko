@@ -269,6 +269,8 @@ function renderLeki({ leki, przyjecia, epizody }) {
   const dorazne = przyjeciaDnia.filter((p) => !p.scheduled_time).sort((a, b) => (a.taken_at < b.taken_at ? -1 : 1));
   const lekPoId = new Map(leki.map((l) => [l.id, l]));
 
+  const odhaczone = dawki.filter(({ lek, godzina }) => przyjeciaDnia.some((p) => p.medication_id === lek.id && p.scheduled_time === godzina)).length;
+  $('#dzis-leki-postep').textContent = dawki.length ? `${odhaczone} z ${dawki.length}` : '';
   if (!dawki.length && !dorazne.length) {
     kontener.replaceChildren(h('p', { class: 'pusty' },
       leki.length ? 'Brak stałych dawek na ten dzień.' : 'Nie masz jeszcze leków ani suplementów. ',

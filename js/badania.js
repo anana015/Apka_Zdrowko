@@ -8,7 +8,9 @@ import * as db from './db.js';
 import { $, h, toast, otworzDialog, pokazBlad, dwaDotkniecia } from './utils.js';
 import { ymd, formatKrotki, formatPelny, liczbaPL, parsujLiczbe, pozaZakresem, walidujWynik } from './obliczenia.js';
 import { wykresBadania } from './wykresy.js';
-import { initDokumenty, renderDokumenty, listaDokumentow, nazwaDokumentu, otworzDokument } from './dokumenty.js';
+import { initDokumenty, renderDokumenty, listaDokumentow, nazwaDokumentu, otworzDokument, wyslijPlik, moznaWyslac } from './dokumenty.js';
+import { odczytajTekst } from './odczyt.js';
+import { rozpoznajWyniki } from './odczyt-parser.js';
 
 export const tytul = 'Badania';
 
@@ -36,6 +38,8 @@ let licznikWierszy = 0;
 let etapPodgladu = false;
 /** @type {any[]} */ let doZapisu = [];
 let resetUsun = () => {};
+/** Plik, z którego odczytano wyniki (do zapisania w Dokumentach). @type {File|null} */
+let plikOdczytu = null;
 let filtr = '';
 
 const pole = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ ($(id));
@@ -43,6 +47,12 @@ const pole = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ ($(id
 export function init() {
   initDokumenty();
   $('#badania-dodaj').addEventListener('click', () => otworzBadanie(null));
+  $('#odczyt-plik').addEventListener('change', (e) => {
+    const pole = /** @type {HTMLInputElement} */ (e.target);
+    const plik = pole.files?.[0];
+    pole.value = ''; // ten sam plik można wybrać ponownie
+    if (plik) odczytajPlik(plik);
+  });
   $('#badania-filtr').addEventListener('change', (e) => { filtr = /** @type {HTMLSelectElement} */ (e.target).value; render(); });
   const szablon = /** @type {HTMLSelectElement} */ ($('#bad-szablon'));
   szablon.replaceChildren(...SZABLONY.map((t) => h('option', { value: t.id, text: t.nazwa })));
@@ -121,7 +131,7 @@ async function zbudujWiersze(id) {
 }
 
 /**
- * @param {{ nazwa: string, jednostka: string, wartosc?: any, dol?: any, gora?: any }} p
+ * @param {{ nazwa: string, jednostka: string, wartosc?: any, dol?: any, gora?: any, uwaga?: string|null }} p
  */
 async function dodajWiersz(p) {
   const nr = ++licznikWierszy;
@@ -136,14 +146,21 @@ async function dodajWiersz(p) {
     poleW('jednostka', 'Jednostka', { type: 'text', value: p.jednostka ?? poprz?.unit ?? '', maxlength: 20 }),
     poleW('dol', 'Zakres od', { type: 'text', inputmode: 'decimal', value: p.dol ?? '', placeholder: poprz?.ref_low != null ? `poprz. ${liczbaPL(poprz.ref_low, 3)}` : '' }),
     poleW('gora', 'Zakres do', { type: 'text', inputmode: 'decimal', value: p.gora ?? '', placeholder: poprz?.ref_high != null ? `poprz. ${liczbaPL(poprz.ref_high, 3)}` : '' }),
+    p.uwaga ? h('p', { class: 'wiersz-badania__uwaga' }, h('strong', { text: 'Sprawdź: ' }), p.uwaga) : null,
     edytowany ? null : h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly wiersz-badania__usun', text: 'Usuń parametr', on: { click: () => { wiersz.remove(); wyjdzZPodgladu(); } } }));
+  if (p.uwaga) wiersz.classList.add('wiersz-badania--sprawdz');
   $('#bad-wiersze').append(wiersz);
 }
 
-/** @param {string|null} id */
-export async function otworzBadanie(id) {
+/**
+ * @typedef {{ plik: File, tekst: string, podglad: string|null, ocr: boolean, wynik: ReturnType<typeof rozpoznajWyniki> }} Odczyt
+ * @param {string|null} id @param {Odczyt|null} [odczyt] wyniki odczytane z pliku do sprawdzenia
+ */
+export async function otworzBadanie(id, odczyt = null) {
   const w = id ? await db.pobierz('lab_results', id) : null;
   edytowany = w;
+  plikOdczytu = odczyt?.plik ?? null;
+  pokazOdczyt(odczyt);
   resetUsun();
   const form = /** @type {HTMLFormElement} */ ($('#form-badanie'));
   form.reset();
@@ -155,15 +172,31 @@ export async function otworzBadanie(id) {
   lista.replaceChildren(...nazwy.map((n) => h('option', { value: n })));
 
   $('#bad-tytul').textContent = w ? `Wynik: ${w.test_name}` : 'Nowy wynik badania';
-  $('#bad-szablon-pole').hidden = Boolean(w);
+  $('#bad-szablon-pole').hidden = Boolean(w || odczyt);
   $('#bad-dodaj-wiersz').hidden = Boolean(w);
   $('#bad-usun').hidden = !w;
-  pole('#bad-data').value = w?.taken_on ?? ymd();
-  pole('#bad-lab').value = w?.lab_name ?? (wszystkie.sort((a, b) => (a.taken_on < b.taken_on ? 1 : -1))[0]?.lab_name ?? '');
+  pole('#bad-data').value = w?.taken_on ?? (odczyt?.wynik.data && odczyt.wynik.data <= ymd() ? odczyt.wynik.data : ymd());
+  pole('#bad-lab').value = w?.lab_name ?? odczyt?.wynik.laboratorium ?? (wszystkie.sort((a, b) => (a.taken_on < b.taken_on ? 1 : -1))[0]?.lab_name ?? '');
   await wypelnijDokumenty(w?.document_id ?? null);
   $('#bad-wiersze').replaceChildren();
   if (w) {
     await dodajWiersz({ nazwa: w.test_name, jednostka: w.unit ?? '', wartosc: liczbaPL(w.value, 6), dol: w.ref_low != null ? liczbaPL(w.ref_low, 6) : '', gora: w.ref_high != null ? liczbaPL(w.ref_high, 6) : '' });
+  } else if (odczyt) {
+    for (const r of odczyt.wynik.wyniki) {
+      const uwagi = [
+        r.znana ? null : 'nazwa z dokumentu, aplikacja jej nie zna',
+        r.znana && r.nazwaZDokumentu !== r.nazwa ? `w dokumencie „${r.nazwaZDokumentu}”` : null,
+        r.dol == null && r.gora == null ? 'brak zakresu' : null,
+        r.jednostka ? null : 'brak jednostki',
+      ].filter(Boolean);
+      const tylkoInformacja = uwagi.length === 1 && uwagi[0]?.startsWith('w dokumencie');
+      await dodajWiersz({
+        nazwa: r.nazwa, jednostka: r.jednostka ?? '', wartosc: liczbaPL(r.wartosc, 6),
+        dol: r.dol != null ? liczbaPL(r.dol, 6) : '', gora: r.gora != null ? liczbaPL(r.gora, 6) : '',
+        uwaga: uwagi.length && !tylkoInformacja ? `${uwagi.join(', ')}.` : null,
+      });
+    }
+    if (!odczyt.wynik.wyniki.length) await zbudujWiersze('jedno');
   } else {
     /** @type {HTMLSelectElement} */ ($('#bad-szablon')).value = 'jedno';
     await zbudujWiersze('jedno');
@@ -198,6 +231,59 @@ function wybranyDokument() {
   const select = /** @type {HTMLSelectElement} */ ($('#bad-dokument'));
   if (select.disabled) return edytowany?.document_id ?? null;
   return select.value || null;
+}
+
+/** Ramka z informacją o odczycie, podglądem dokumentu i odczytanym tekstem. @param {Odczyt|null} odczyt */
+function pokazOdczyt(odczyt) {
+  $('#bad-odczyt').hidden = !odczyt;
+  if (!odczyt) return;
+  const n = odczyt.wynik.wyniki.length;
+  $('#bad-odczyt-tytul').textContent = n
+    ? `Odczytano ${n} ${n === 1 ? 'wynik' : n < 5 ? 'wyniki' : 'wyników'} z pliku „${odczyt.plik.name}”${odczyt.ocr ? ' (rozpoznawanie tekstu ze zdjęcia, możliwe pomyłki)' : ''}.`
+    : `Nie udało się rozpoznać wyników w pliku „${odczyt.plik.name}”. Przepisz je ręcznie; odczytany tekst jest niżej.`;
+  const obraz = /** @type {HTMLImageElement} */ ($('#bad-odczyt-obraz'));
+  $('#bad-odczyt-podglad').hidden = !odczyt.podglad;
+  obraz.src = odczyt.podglad ?? '';
+  /** @type {HTMLDetailsElement} */ ($('#bad-odczyt-podglad')).open = Boolean(odczyt.podglad) && window.matchMedia('(min-width: 640px)').matches;
+  $('#bad-odczyt-tekst').textContent = odczyt.tekst.trim() || '(brak tekstu)';
+  const dolacz = /** @type {HTMLInputElement} */ ($('#bad-odczyt-dolacz'));
+  $('#bad-odczyt-dolacz-pole').hidden = !moznaWyslac();
+  dolacz.checked = moznaWyslac();
+}
+
+/** Odczyt pliku → formularz wyniku do sprawdzenia. @param {File} plik */
+async function odczytajPlik(plik) {
+  const pudelko = $('#odczyt-postep');
+  const opis = $('#odczyt-opis');
+  const pasek = /** @type {HTMLProgressElement} */ ($('#odczyt-pasek'));
+  const etykieta = /** @type {HTMLElement} */ (document.querySelector('label[for="odczyt-plik"]'));
+  pudelko.hidden = false;
+  etykieta.setAttribute('aria-disabled', 'true');
+  etykieta.style.pointerEvents = 'none';
+  /** @type {import("./odczyt.js").Postep} */
+  const postep = (tekst, p) => {
+    opis.textContent = tekst;
+    if (p == null) pasek.removeAttribute('value'); else pasek.value = p;
+  };
+  try {
+    const { tekst, podglad, ocr } = await odczytajTekst(plik, postep);
+    postep('Szukam wyników w tekście…');
+    const zapisane = await db.wszystkie('lab_results');
+    const istniejace = [...new Set(zapisane.map((w) => w.test_name))];
+    const jednostki = [...new Set(zapisane.map((w) => w.unit).filter(Boolean))];
+    const wynik = rozpoznajWyniki(tekst, istniejace, jednostki);
+    pudelko.hidden = true;
+    await otworzBadanie(null, { plik, tekst, podglad, ocr, wynik });
+  } catch (e) {
+    console.warn('Odczyt pliku:', e);
+    const msg = /** @type {any} */ (e)?.message ?? String(e);
+    postep(/fetch|network|Failed to load|import/i.test(msg)
+      ? 'Nie udało się pobrać modułu odczytu. Za pierwszym razem potrzebny jest internet.'
+      : `Nie udało się odczytać pliku: ${msg}`, 0);
+  } finally {
+    etykieta.removeAttribute('aria-disabled');
+    etykieta.style.pointerEvents = '';
+  }
 }
 
 function wyjdzZPodgladu() {
@@ -257,7 +343,25 @@ async function sprawdz() {
 }
 
 async function zapisz() {
+  const przycisk = /** @type {HTMLButtonElement} */ ($('#bad-zapisz'));
+  if (plikOdczytu && /** @type {HTMLInputElement} */ ($('#bad-odczyt-dolacz')).checked && moznaWyslac() && !doZapisu.some((r) => r.document_id)) {
+    przycisk.disabled = true;
+    przycisk.textContent = 'Wysyłam plik…';
+    try {
+      const nazwy = [...new Set(doZapisu.map((r) => r.test_name))];
+      const idDokumentu = await wyslijPlik(plikOdczytu, {
+        kind: 'lab', doc_date: doZapisu[0]?.taken_on ?? null,
+        note: `${nazwy.slice(0, 3).join(', ')}${nazwy.length > 3 ? ` i ${nazwy.length - 3} innych` : ''}`.slice(0, 200),
+      });
+      doZapisu = doZapisu.map((r) => ({ ...r, document_id: idDokumentu }));
+    } catch (e) {
+      toast(`Wyniki zapisuję bez pliku: ${/** @type {any} */ (e)?.message ?? e}`);
+    } finally {
+      przycisk.disabled = false;
+    }
+  }
   for (const r of doZapisu) await db.zapisz('lab_results', { document_id: null, note: null, ...r });
+  plikOdczytu = null;
   const n = doZapisu.length;
   wyjdzZPodgladu();
   /** @type {HTMLDialogElement} */ ($('#dialog-badanie')).close();

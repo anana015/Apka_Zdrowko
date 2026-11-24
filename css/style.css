@@ -451,6 +451,9 @@ th { font-weight: 700; color: var(--tekst-2); }
 }
 .zaleznosc p { margin: 0 0 0.375rem; }
 .zaleznosc p:last-child { margin: 0; }
+.zaleznosc__zastrzezenie { font-size: 0.9375rem; color: var(--tekst-2); margin-bottom: 0.75rem; }
+details.rozwijane { margin: 0.5rem 0; }
+details.rozwijane > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--noc); font-weight: 650; }
 .zaleznosc__omow { font-weight: 650; }
 .zastrzezenie-stopka {
   margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--linia);
@@ -475,6 +478,30 @@ th { font-weight: 700; color: var(--tekst-2); }
 .podglad { background: var(--noc-mgla); border-radius: var(--r-sredni); padding: 0.875rem 1rem; margin: 0.75rem 0; }
 .podglad ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
 .ostrzezenie { color: var(--tekst); font-weight: 650; }
+.licznik { font-size: 0.875rem; font-weight: 650; color: var(--tekst-2); background: var(--powierzchnia-2); border-radius: 999px; padding: 0.125rem 0.5rem; vertical-align: middle; }
+.licznik:empty { display: none; }
+.sekcja--leki-dnia { margin-top: 1.25rem; }
+
+/* Odczyt wyników z pliku */
+.odczyt-pliku { margin: 0.75rem 0 1.25rem; }
+.odczyt-pliku > label.btn { width: 100%; gap: 0.5rem; cursor: pointer; }
+.odczyt-pliku:has(input:focus-visible) > label.btn { outline: 3px solid var(--noc); outline-offset: 2px; }
+.odczyt-pliku .drobny { margin-top: 0.375rem; }
+.odczyt-postep { background: var(--noc-mgla); border-radius: var(--r-sredni); padding: 0.75rem 1rem; }
+.odczyt-postep p { margin: 0 0 0.5rem; }
+.odczyt-postep progress { width: 100%; accent-color: var(--noc); }
+.odczyt-info { background: var(--noc-mgla); border-radius: var(--r-sredni); padding: 0.875rem 1rem; margin-bottom: 1rem; }
+.odczyt-info__tytul { font-weight: 700; margin-bottom: 0.25rem; }
+.odczyt-info details { margin: 0.5rem 0; }
+.odczyt-info summary { cursor: pointer; font-weight: 650; min-height: 32px; display: flex; align-items: center; }
+.odczyt-info img { display: block; max-width: 100%; max-height: 70vh; margin-top: 0.5rem; border-radius: var(--r-maly); border: 1px solid var(--linia); background: #fff; }
+.odczyt-info__tekst {
+  max-height: 14rem; overflow: auto; white-space: pre-wrap; font-size: 0.8125rem;
+  background: var(--powierzchnia); border-radius: var(--r-maly); padding: 0.5rem 0.75rem; margin: 0.5rem 0 0;
+}
+.wiersz-badania--sprawdz { border-color: var(--swit); border-width: 2px; }
+.wiersz-badania__uwaga { grid-column: 1 / -1; margin: 0; font-size: 0.875rem; color: var(--tekst-2); }
+.wiersz-badania__uwaga strong { color: var(--tekst); }
 
 /* ---------- Dialogi ---------- */
 .dialog {
@@ -589,3 +616,8 @@ body.zablokowane .gora, body.zablokowane main, body.zablokowane .nawigacja, body
 .sen-zdrowie p { flex-basis: 100%; margin: 0; }
 .baner-flag__tresc--lekarz { background: var(--powierzchnia); color: var(--tekst); border-color: var(--swit); }
 .baner-flag__tresc--lekarz .baner-flag__tytul .ikona { color: var(--swit); }
+
+/* Znacznik rozwijania dla <summary> wyświetlanych jako flex (wtedy przeglądarka chowa własną strzałkę). */
+.odczyt-info summary::before, details.rozwijane > summary::before { content: "▸"; display: inline-block; width: 1.1em; }
+.odczyt-info details[open] > summary::before, details.rozwijane[open] > summary::before { content: "▾"; }
+.odczyt-info summary::-webkit-details-marker, details.rozwijane > summary::-webkit-details-marker { display: none; }

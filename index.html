@@ -118,6 +118,14 @@
 
       <div id="dzis-bol" class="strefa-bolu"></div>
 
+      <section class="sekcja sekcja--leki-dnia" aria-labelledby="dzis-leki-tytul">
+        <div class="sekcja__naglowek">
+          <h2 id="dzis-leki-tytul">Leki i suplementy <span class="licznik" id="dzis-leki-postep"></span></h2>
+          <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dorazny">Dodaj doraźny</button>
+        </div>
+        <div id="dzis-leki"></div>
+      </section>
+
       <form id="form-wpis" class="wpis" novalidate>
         <p class="podpowiedz" id="wpis-zrodlo" hidden></p>
 
@@ -205,14 +213,6 @@
           <button type="submit" class="btn btn-glowny">Zapisz wpis</button>
         </div>
       </form>
-
-      <section class="sekcja" aria-labelledby="dzis-leki-tytul">
-        <div class="sekcja__naglowek">
-          <h2 id="dzis-leki-tytul">Leki i suplementy</h2>
-          <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dorazny">Dodaj doraźny</button>
-        </div>
-        <div id="dzis-leki"></div>
-      </section>
 
       <section class="sekcja" aria-labelledby="dzis-epizody-tytul">
         <div class="sekcja__naglowek">
@@ -318,6 +318,18 @@
         <h1 id="badania-tytul" tabindex="-1">Badania</h1>
         <button type="button" class="btn btn-glowny btn-maly" id="badania-dodaj">Dodaj wynik</button>
       </div>
+      <div class="odczyt-pliku">
+        <label class="btn btn-drugorzedny" for="odczyt-plik">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-badania"/></svg>
+          <span>Odczytaj wyniki z PDF lub zdjęcia</span>
+        </label>
+        <input type="file" id="odczyt-plik" class="sr-only" accept="application/pdf,image/jpeg,image/png,image/heic,image/heif,.heic,.heif">
+        <p class="drobny">Aplikacja odczyta wyniki na tym telefonie (plik nigdzie nie wychodzi), a Ty sprawdzisz je przed zapisem.</p>
+        <div class="odczyt-postep" id="odczyt-postep" role="status" aria-live="polite" hidden>
+          <p id="odczyt-opis"></p>
+          <progress id="odczyt-pasek" max="1"></progress>
+        </div>
+      </div>
       <p class="drobny">Zakresy referencyjne przepisuj z wyniku swojego laboratorium. Oznaczenie „poza zakresem laboratorium” to tylko porównanie liczb, nie ocena wyniku.</p>
       <div class="pole">
         <label for="badania-filtr">Pokaż badanie</label>
@@ -405,7 +417,9 @@
 
       <section class="sekcja" aria-labelledby="skrot-tytul">
         <h2 id="skrot-tytul">Sen z aplikacji Zdrowie (iPhone)</h2>
-        <p class="drobny">Przycisk „Pobierz sen ze Zdrowia” na ekranie Dziś uruchamia skrót, który kopiuje sen z ostatnich 14 dni. Po powrocie dotykasz „Wklej sen”, a aplikacja uzupełnia wpisy dla każdego dnia (nastrój i notatki zostają bez zmian). Skrót tworzysz raz w aplikacji <strong>Skróty</strong>, nazwa dokładnie <strong>Dziennik sen</strong>:</p>
+        <p class="drobny">Przycisk „Pobierz sen ze Zdrowia” na ekranie Dziś uruchamia skrót, który kopiuje sen z ostatnich 14 dni. Po powrocie dotykasz „Wklej sen”, a aplikacja uzupełnia wpisy dla każdego dnia (nastrój i notatki zostają bez zmian). Skrót tworzysz raz w aplikacji <strong>Skróty</strong>, nazwa dokładnie <strong>Dziennik sen</strong>.</p>
+        <details class="rozwijane">
+          <summary>Jak zbudować skrót (7 kroków)</summary>
         <ol class="punkty">
           <li><strong>Znajdź próbki aplikacji Zdrowie</strong>: typ <strong>Sen</strong>, data początkowa <strong>w ciągu ostatnich 14 dni</strong>, sortuj według daty początkowej od najstarszych, <strong>Ograniczenie wyłączone</strong>. Jeśli w aplikacji Zdrowie Twój sen jest zapisany tylko jako „W łóżku”, nie dodawaj filtra „Wartość to nie W łóżku”.</li>
           <li><strong>Powtórz z każdym</strong> (szukaj: „powtórz”) — wejście: wynik kroku 1.</li>
@@ -416,6 +430,7 @@
           <li><strong>Kopiuj do schowka</strong>.</li>
         </ol>
         <p class="drobny">Test: uruchom skrót i wklej wynik w Notatkach. Każdy wiersz powinien wyglądać jak <code>2026-11-23 23:12;2026-11-24 06:58</code>. Nazwy akcji mogą się nieco różnić w zależności od wersji iOS.</p>
+        </details>
       </section>
 
       <section class="sekcja" aria-labelledby="pomoc-tytul">
@@ -732,6 +747,22 @@
         <button type="button" class="przycisk-ikona" data-zamknij aria-label="Zamknij">
           <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
         </button>
+      </div>
+      <div class="odczyt-info" id="bad-odczyt" hidden>
+        <p class="odczyt-info__tytul" id="bad-odczyt-tytul"></p>
+        <p class="drobny">Porównaj każdy wiersz z dokumentem, zwłaszcza przecinki, jednostki i zakresy. Wiersze oznaczone „sprawdź” mają nazwę, której aplikacja nie zna, albo nie mają zakresu.</p>
+        <details class="odczyt-info__podglad" id="bad-odczyt-podglad">
+          <summary>Pokaż dokument</summary>
+          <img id="bad-odczyt-obraz" alt="Podgląd odczytanego dokumentu">
+        </details>
+        <details>
+          <summary>Odczytany tekst</summary>
+          <pre class="odczyt-info__tekst" id="bad-odczyt-tekst"></pre>
+        </details>
+        <label class="zgoda" id="bad-odczyt-dolacz-pole">
+          <input type="checkbox" id="bad-odczyt-dolacz" checked>
+          <span>Zapisz też plik w Dokumentach i przypnij go do tych wyników</span>
+        </label>
       </div>
       <div class="pole" id="bad-szablon-pole">
         <label for="bad-szablon">Zestaw</label>

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8.0 (2026-11-24) — odczyt wyników z PDF i zdjęć, poprawki UX
+Bez migracji bazy.
+
+### Dodano
+- **Badania → „Odczytaj wyniki z PDF lub zdjęcia”**. Odczyt działa w całości na urządzeniu, plik nie trafia do zewnętrznych usług:
+  - PDF z laboratorium: tekst z pliku (pdf.js). Skan zapisany jako PDF i zdjęcia (JPG, PNG, HEIC w Safari): rozpoznawanie tekstu Tesseract.js, język polski.
+  - Rozpoznaje nazwę, wynik, jednostkę, zakres (`12,0 - 16,0`, `< 190`, `> 45`), znaczniki H/L, datę pobrania i znane laboratoria. Nazwy z wydruków (np. „WBC”, „Hemoglobina”) dopasowuje do nazw, których już używasz, i do nazw z zestawów. Poprawia typowe pomyłki OCR w jednostkach (np. „gldl” → „g/dl”).
+  - Wyniki trafiają do zwykłego formularza do sprawdzenia: podgląd dokumentu, odczytany tekst, wiersze oznaczone „Sprawdź” (nieznana nazwa, brak zakresu lub jednostki). Zapis dopiero po „Sprawdź” → „Zapisz”.
+  - Po zalogowaniu plik może od razu trafić do Dokumentów i zostać przypięty do odczytanych wyników.
+  - Biblioteki (ok. 8 MB, `js/vendor/odczyt/`) pobierają się przy pierwszym użyciu i zostają w osobnym cache (`odczyt-1` w `sw.js`); nie wydłużają instalacji aplikacji.
+- Ostrzeżenie przy zapisie wyniku, gdy taki sam wynik z tego dnia już jest zapisany (np. ten sam plik odczytany drugi raz).
+
+### Zmieniono (UX)
+- Dziś: „Leki i suplementy” przeniesione nad formularz wpisu (odhaczanie to najczęstsza codzienna czynność), z licznikiem „1 z 2”.
+- Leki: rejestr przyjęć pokazuje najpierw 5 ostatnich dni, starsze po „Pokaż starsze dni”.
+- Wykresy → Zależności: zastrzeżenie „to obserwacja, nie dowód przyczyny” raz nad listą zamiast w każdej karcie.
+- Historia: w kalendarzu widać wszystkie dolegliwości (wcześniej tylko ból głowy); legenda „dzień z dolegliwością”.
+- Ustawienia: instrukcja skrótu „Dziennik sen” zwinięta pod „Jak zbudować skrót (7 kroków)”.
+
 ## 0.7.0 (2026-11-24) — dokument przy wyniku, zgoda na dane, CI
 **Najpierw uruchom migrację `0006_zgoda_prywatnosc.sql` w SQL Editorze.** Bez niej aplikacja działa, ale zgoda zostaje tylko na urządzeniu (w konsoli pojawi się ostrzeżenie).
 

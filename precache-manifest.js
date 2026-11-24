@@ -1,6 +1,6 @@
 // Plik generowany przez scripts/generuj-precache.mjs — nie edytuj ręcznie.
 self.PRECACHE = {
-  "wersja": "f8413134aa6d",
+  "wersja": "7fcfe8e401b0",
   "pliki": [
     "./",
     "./css/style.css",
@@ -27,6 +27,8 @@ self.PRECACHE = {
     "./js/korelacje.js",
     "./js/leki.js",
     "./js/obliczenia.js",
+    "./js/odczyt-parser.js",
+    "./js/odczyt.js",
     "./js/offline.js",
     "./js/synchronizacja.js",
     "./js/tagi.js",

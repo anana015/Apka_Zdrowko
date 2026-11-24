@@ -59,6 +59,10 @@ function renderLista(leki) {
   }));
 }
 
+/** Rejestr pokazuje najpierw ostatnie dni; starsze po dotknięciu przycisku (długa lista na telefonie). */
+const DNI_NA_START = 5;
+let pokazWszystkieDni = false;
+
 /** @param {any[]} leki @param {any[]} przyjecia @param {any[]} epizody */
 function renderRejestr(leki, przyjecia, epizody) {
   const kontener = $('#leki-rejestr');
@@ -77,7 +81,12 @@ function renderRejestr(leki, przyjecia, epizody) {
     if (!poDniu.has(d)) poDniu.set(d, []);
     poDniu.get(d)?.push(p);
   }
-  kontener.replaceChildren(...[...poDniu].map(([d, lista]) => h('div', { class: 'sekcja' },
+  const dni = [...poDniu];
+  const widoczne = pokazWszystkieDni ? dni : dni.slice(0, DNI_NA_START);
+  const wiecej = dni.length > widoczne.length
+    ? h('button', { type: 'button', class: 'btn btn-drugorzedny', text: `Pokaż starsze dni (${dni.length - widoczne.length})`, on: { click: () => { pokazWszystkieDni = true; renderRejestr(leki, przyjecia, epizody); } } })
+    : null;
+  kontener.replaceChildren(...widoczne.map(([d, lista]) => h('div', { class: 'sekcja' },
     h('h3', { text: wielkaLitera(formatDzien(d)) }),
     h('ul', { class: 'lista lista--zwarta' }, lista.map((p) => {
       const lek = lekPoId.get(p.medication_id);
@@ -89,7 +98,7 @@ function renderRejestr(leki, przyjecia, epizody) {
           h('p', { class: 'lista__tytul', text: `${hhmm(p.taken_at)} ${lek?.name ?? 'Usunięty lek'}` }),
           h('p', { class: 'lista__opis', text: [p.dose_text, p.scheduled_time ? `dawka z ${p.scheduled_time}` : 'doraźnie', p.reason, ep ? `przy: ${nazwaEpizodu(ep).toLowerCase()}` : null].filter(Boolean).join(', ') })),
         usun);
-    })))));
+    })))), ...(wiecej ? [wiecej] : []));
 }
 
 function pokazGodziny() {

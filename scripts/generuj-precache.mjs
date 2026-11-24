@@ -12,6 +12,8 @@ const PLIK_WYJSCIOWY = 'precache-manifest.js';
 const POJEDYNCZE = ['index.html', 'manifest.webmanifest'];
 const KATALOGI = ['css', 'js', 'fonts', 'icons'];
 const ROZSZERZENIA = /\.(html|css|js|mjs|woff2|png|svg|webmanifest)$/;
+/** Moduł odczytu wyników (ok. 8 MB) nie trafia do precache: ładuje się przy pierwszym użyciu (sw.js, cache „odczyt-…”). */
+const POMIJANE = /^js\/vendor\/odczyt\//;
 
 function przejdz(katalog) {
   if (!existsSync(katalog)) return [];
@@ -29,6 +31,7 @@ export function zbierzPliki(korzen = KORZEN) {
   ].filter((p) => ROZSZERZENIA.test(p));
   return pliki
     .map((p) => relative(korzen, p).split(sep).join('/'))
+    .filter((p) => !POMIJANE.test(p))
     .sort();
 }
 

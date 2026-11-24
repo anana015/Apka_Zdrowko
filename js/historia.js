@@ -3,7 +3,7 @@
 import * as db from './db.js';
 import { $, h, ikona } from './utils.js';
 import {
-  ymd, formatDzien, czyBolGlowy, formatMiesiac, formatGodziny, snuZWpisu, dzienEpizodu, nazwaEpizodu, hhmm,
+  ymd, formatDzien, formatMiesiac, formatGodziny, snuZWpisu, dzienEpizodu, nazwaEpizodu, hhmm,
 } from './obliczenia.js';
 import { otworzEpizod } from './dolegliwosci.js';
 
@@ -23,7 +23,7 @@ export function init() {
   $('#kal-nastepny').addEventListener('click', () => przesun(1));
   $('#kal-legenda').replaceChildren(
     ...[1, 2, 3, 4, 5].map((n) => h('span', {}, h('i', { 'data-n': String(n) }), `${n}: ${NASTROJ[n]}`)),
-    h('span', {}, h('i', { class: 'legenda__bol' }), 'dzień z bólem głowy'),
+    h('span', {}, h('i', { class: 'legenda__bol' }), 'dzień z dolegliwością'),
   );
 }
 
@@ -45,8 +45,8 @@ export async function render() {
   const wpisPoDacie = new Map(dane.wpisy.map((w) => [w.entry_date, w]));
   /** @type {Map<string, number>} */
   const bolePoDacie = new Map();
+  // Wszystkie rodzaje dolegliwości (nie tylko ból głowy), żeby w kalendarzu było widać np. ból pleców.
   for (const e of dane.epizody) {
-    if (!czyBolGlowy(e)) continue;
     const d = dzienEpizodu(e);
     bolePoDacie.set(d, (bolePoDacie.get(d) ?? 0) + 1);
   }
@@ -65,7 +65,7 @@ export async function render() {
     const opis = [
       wielkaLitera(formatDzien(data)),
       w?.mood ? `nastrój ${w.mood} z 5` : w ? 'wpis bez nastroju' : 'brak wpisu',
-      bole ? `${bole} ${bole === 1 ? 'epizod' : bole < 5 ? 'epizody' : 'epizodów'} bólu głowy` : null,
+      bole ? `${bole} ${bole === 1 ? 'dolegliwość' : bole < 5 ? 'dolegliwości' : 'dolegliwości'}` : null,
     ].filter(Boolean).join(', ');
     komorki.push(h('button', {
       type: 'button', class: 'kalendarz__dzien', 'aria-label': opis, 'aria-pressed': String(data === wybrany),

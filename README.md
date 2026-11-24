@@ -2,7 +2,7 @@
 
 Prywatna aplikacja PWA do zapisywania snu, nastroju, dolegliwości, leków i wyników badań. Pokazuje wykresy i możliwe zależności w danych. Nie stawia diagnoz i nie zastępuje lekarza.
 
-**Stan: 0.7.0.** Logowanie z obowiązkowym TOTP, synchronizacja z Supabase (Frankfurt, UE), działanie offline, dolegliwości z listą objawów alarmowych, leki, badania z dokumentami, wykresy, zależności i raport dla lekarza. Historia zmian: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+**Stan: 0.8.0.** Logowanie z obowiązkowym TOTP, synchronizacja z Supabase (Frankfurt, UE), działanie offline, dolegliwości z listą objawów alarmowych, leki, badania z dokumentami i odczytem wyników z PDF lub zdjęć (na urządzeniu), wykresy, zależności i raport dla lekarza. Historia zmian: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 Hosting: GitHub Pages z publicznego repozytorium. Migracje bazy wgrywa się ręcznie w SQL Editorze Supabase (pliki `supabase/migrations/`, po kolei).
 
@@ -41,6 +41,8 @@ js/wpis.js          ekran Dziś
 js/dolegliwosci.js  epizody, „Zaczął się ból”
 js/leki.js          leki, harmonogram, przyjęcia
 js/badania.js       wyniki badań
+js/odczyt.js        odczyt tekstu z PDF/zdjęć (pdf.js, Tesseract.js z js/vendor/odczyt/)
+js/odczyt-parser.js rozpoznawanie wyników w tekście            ← testowane
 js/historia.js      kalendarz
 js/wykresy.js       wykresy SVG, zależności, raport
 js/ustawienia.js    profil, eksport/import

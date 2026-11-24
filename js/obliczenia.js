@@ -237,8 +237,8 @@ export function pozaZakresem(wartosc, dol, gora) {
 
 /**
  * Walidacja wyniku przed zapisem (ryzyko: błąd w ręcznie wpisanej wartości).
- * @param {{ test_name: string, value: number|null, unit?: string|null, ref_low?: number|null, ref_high?: number|null }} w
- * @param {{ test_name: string, unit?: string|null, taken_on: string }[]} poprzednie
+ * @param {{ test_name: string, value: number|null, unit?: string|null, ref_low?: number|null, ref_high?: number|null, taken_on?: string }} w
+ * @param {{ test_name: string, unit?: string|null, taken_on: string, value?: number|null }[]} poprzednie
  */
 export function walidujWynik(w, poprzednie = []) {
   /** @type {string[]} */ const bledy = [];
@@ -256,6 +256,8 @@ export function walidujWynik(w, poprzednie = []) {
     ostrzezenia.push(`${w.test_name}: poprzednio wpisano jednostkę „${ostatnia.unit}”, teraz „${w.unit}”. Sprawdź, czy wartości są porównywalne.`);
   }
   if (w.value != null && w.value < 0) ostrzezenia.push(`${w.test_name}: wartość jest ujemna. Sprawdź wpis.`);
+  const duplikat = poprzednie.some((p) => p.test_name.trim().toLowerCase() === w.test_name?.trim().toLowerCase() && p.taken_on === w.taken_on && p.value === w.value);
+  if (duplikat) ostrzezenia.push(`${w.test_name}: taki sam wynik z tego dnia jest już zapisany. Zapisanie doda drugi taki sam wpis.`);
   return { bledy, ostrzezenia };
 }
 

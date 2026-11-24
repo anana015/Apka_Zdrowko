@@ -52,35 +52,46 @@ export function initDokumenty() {
   });
 }
 
+/**
+ * Wysyła plik do prywatnego bucketu i zapisuje wpis w tabeli documents.
+ * @param {File} plik @param {{ kind: string, doc_date: string|null, note: string|null }} opis
+ * @returns {Promise<string>} identyfikator dokumentu
+ */
+export async function wyslijPlik(plik, opis) {
+  if (!dostepne()) throw new Error('Zaloguj się, aby wysyłać pliki.');
+  if (!navigator.onLine) throw new Error('Brak internetu. Wyślij plik, gdy wróci połączenie.');
+  const mime = typPliku(plik);
+  if (!(mime in TYPY)) throw new Error('Dozwolone są tylko pliki PDF, JPG, PNG i HEIC.');
+  if (plik.size > LIMIT_B) throw new Error(`Plik ma ${(plik.size / 1048576).toFixed(1).replace('.', ',')} MB, a limit to 10 MB.`);
+  const id = uuid();
+  const sciezka = `${biezacyUzytkownik().id}/${id}.${TYPY[/** @type {keyof typeof TYPY} */ (mime)]}`;
+  const { error: e1 } = await klient.storage.from(BUCKET).upload(sciezka, plik, { contentType: mime, upsert: false });
+  if (e1) throw e1;
+  const { error: e2 } = await klient.from('documents').insert({
+    id, storage_path: sciezka, file_name: plik.name.slice(0, 200), mime, size_bytes: plik.size, ...opis,
+  });
+  if (e2) {
+    await klient.storage.from(BUCKET).remove([sciezka]); // bez wpisu w tabeli plik byłby osierocony
+    throw e2;
+  }
+  ostatnie = null;
+  return id;
+}
+
 async function wyslij() {
   const stan = $('#dok-stan');
   const pole = /** @type {HTMLInputElement} */ ($('#dok-plik'));
   const plik = pole.files?.[0];
-  if (!dostepne()) { stan.textContent = 'Zaloguj się, aby wysyłać pliki.'; return; }
-  if (!navigator.onLine) { stan.textContent = 'Brak internetu. Wyślij plik, gdy wróci połączenie.'; return; }
   if (!plik) { stan.textContent = 'Wybierz plik.'; pole.focus(); return; }
-  const mime = typPliku(plik);
-  if (!(mime in TYPY)) { stan.textContent = 'Dozwolone są tylko pliki PDF, JPG, PNG i HEIC.'; return; }
-  if (plik.size > LIMIT_B) { stan.textContent = `Plik ma ${(plik.size / 1048576).toFixed(1).replace('.', ',')} MB, a limit to 10 MB.`; return; }
-
   const przycisk = /** @type {HTMLButtonElement} */ ($('#dok-wyslij'));
   przycisk.disabled = true;
   stan.textContent = 'Wysyłam…';
-  const id = uuid();
-  const sciezka = `${biezacyUzytkownik().id}/${id}.${TYPY[/** @type {keyof typeof TYPY} */ (mime)]}`;
   try {
-    const { error: e1 } = await klient.storage.from(BUCKET).upload(sciezka, plik, { contentType: mime, upsert: false });
-    if (e1) throw e1;
-    const { error: e2 } = await klient.from('documents').insert({
-      id, storage_path: sciezka, file_name: plik.name.slice(0, 200), mime, size_bytes: plik.size,
+    await wyslijPlik(plik, {
       kind: /** @type {HTMLSelectElement} */ ($('#dok-rodzaj')).value,
       doc_date: /** @type {HTMLInputElement} */ ($('#dok-data')).value || null,
       note: /** @type {HTMLInputElement} */ ($('#dok-notatka')).value.trim() || null,
     });
-    if (e2) {
-      await klient.storage.from(BUCKET).remove([sciezka]); // bez wpisu w tabeli plik byłby osierocony
-      throw e2;
-    }
     pole.value = '';
     /** @type {HTMLInputElement} */ ($('#dok-notatka')).value = '';
     stan.textContent = '';
@@ -92,6 +103,9 @@ async function wyslij() {
     przycisk.disabled = false;
   }
 }
+
+/** Czy można teraz wysłać plik (zalogowano i jest internet). */
+export const moznaWyslac = () => Boolean(dostepne()) && navigator.onLine;
 
 /**
  * Otwiera dokument przypięty do wyniku badania (po identyfikatorze).

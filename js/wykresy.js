@@ -9,7 +9,7 @@ import {
   ymd, dodajDni, zYmd, formatKrotki, formatPelny, formatGodziny, liczbaPL, seriaDzienna, podsumowanieOkresu,
   dzienEpizodu, nazwaEpizodu, hhmm, opisHarmonogramu, pozaZakresem, snuZWpisu,
 } from './obliczenia.js';
-import { analizujZaleznosci } from './korelacje.js';
+import { analizujZaleznosci, ZDANIE_OSTRZEGAWCZE } from './korelacje.js';
 import { OBJAWY } from './dolegliwosci.js';
 import { ZASTRZEZENIE } from './teksty.js';
 
@@ -269,9 +269,11 @@ function renderZaleznosci({ wpisy, epizody, leki, przyjecia }) {
       return;
     }
     kontener.replaceChildren(...[
+      // Zastrzeżenie raz nad listą zamiast w każdej karcie; w karcie tylko uwagi szczególne (np. przy lekach).
+      h('p', { class: 'zaleznosc__zastrzezenie', text: ZDANIE_OSTRZEGAWCZE }),
       ...w.wyniki.map((r) => h('div', { class: 'zaleznosc' },
         h('p', { text: r.zdanie }),
-        h('p', { class: 'drobny', text: r.ostrzezenie }),
+        r.ostrzezenie && r.ostrzezenie !== ZDANIE_OSTRZEGAWCZE ? h('p', { class: 'drobny', text: r.ostrzezenie.replace(ZDANIE_OSTRZEGAWCZE, '').trim() }) : null,
         r.powtarzalny ? h('p', { class: 'drobny', text: 'Wzór powtarza się w obu połowach okresu.' }) : null)),
       w.wyniki.some((r) => r.powtarzalny) ? h('p', { class: 'zaleznosc__omow', text: 'Powtarzające się wzorce warto omówić z lekarzem.' }) : null,
       metoda].filter((x) => x != null));
