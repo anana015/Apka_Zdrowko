@@ -1,0 +1,16 @@
+# Konfiguracja gitleaks: domyślne reguły + sekrety Supabase.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "supabase-secret-key"
+description = "Klucz sekretny Supabase"
+regex = '''sb_secret_[A-Za-z0-9_-]{20,}'''
+
+[[rules]]
+id = "postgres-url-z-haslem"
+description = "Adres bazy PostgreSQL z hasłem"
+regex = '''postgres(?:ql)?://[^:\s/]+:[^@\s]+@[^\s]+'''
+
+[allowlist]
+paths = ['''node_modules/''', '''js/vendor/''']
