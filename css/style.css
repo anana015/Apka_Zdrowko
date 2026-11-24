@@ -571,7 +571,7 @@ body.zablokowane .gora, body.zablokowane main, body.zablokowane .nawigacja, body
 
 /* ---------- Wiedza i sen ze Zdrowia ---------- */
 .wiedza-spis { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 1rem; }
-.wiedza-temat h3 { margin-top: 1rem; }
+.wiedza-temat h3, .sekcja h3 { margin-top: 1rem; }
 .wiedza-mozliwe { border-bottom: 1px solid var(--linia); }
 .wiedza-mozliwe > summary { cursor: pointer; min-height: 48px; display: flex; align-items: center; gap: 0.5rem; font-weight: 650; }
 .wiedza-mozliwe[open] { padding-bottom: 0.75rem; }

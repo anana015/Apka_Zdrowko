@@ -17,7 +17,7 @@ import * as ustawienia from './ustawienia.js';
 import * as wiedza from './wiedza.js';
 import { zainicjujEpizody } from './dolegliwosci.js';
 import { skonfigurowano, zainicjujLogowanie, zdarzeniaAuth } from './auth.js';
-import { startSynchronizacji, uruchomHarmonogram } from './synchronizacja.js';
+import { startSynchronizacji, uruchomHarmonogram, synchronizuj } from './synchronizacja.js';
 
 /** @type {Record<string, { init?: () => void, render: (p: URLSearchParams) => Promise<void>|void, odswiez?: () => Promise<void>|void, tytul: string }>} */
 const EKRANY = { dzis, historia, wykresy, leki, badania, ustawienia, wiedza };
@@ -126,26 +126,49 @@ export function zastosujMotyw(motyw) {
   document.documentElement.dataset.motyw = motyw;
 }
 
+/** Zastrzeżenie medyczne i zgoda na przechowywanie danych (sekcje 2 i 14). Wraca, dopóki brakuje którejś. */
 async function sprawdzZastrzezenie() {
   const profil = (await db.meta('profil', {})) ?? {};
-  if (profil.disclaimer_accepted_at) return;
+  if (profil.disclaimer_accepted_at && profil.privacy_accepted_at) return;
   const dialog = /** @type {HTMLDialogElement} */ ($('#dialog-zastrzezenie'));
-  const zgoda = /** @type {HTMLInputElement} */ ($('#dz-zgoda'));
+  const zgody = [/** @type {HTMLInputElement} */ ($('#dz-zgoda')), /** @type {HTMLInputElement} */ ($('#dz-zgoda-dane'))];
   const przycisk = /** @type {HTMLButtonElement} */ ($('#dz-akceptuj'));
+  // Kto potwierdził zastrzeżenie przed 0.7.0, widzi je już zaznaczone i dopowiada tylko zgodę na dane.
+  zgody[0].checked = Boolean(profil.disclaimer_accepted_at);
+  const odswiez = () => { przycisk.disabled = !zgody.every((z) => z.checked); };
+  odswiez();
   dialog.addEventListener('cancel', (e) => e.preventDefault()); // Esc nie zamyka — wymagane potwierdzenie
-  zgoda.addEventListener('change', () => { przycisk.disabled = !zgoda.checked; });
+  for (const z of zgody) z.addEventListener('change', odswiez);
   $('#form-zastrzezenie').addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!zgoda.checked) return;
+    if (!zgody.every((z) => z.checked)) return;
     const aktualny = (await db.meta('profil', {})) ?? {};
-    await db.ustawMeta('profil', { ...aktualny, disclaimer_accepted_at: new Date().toISOString() });
+    const teraz = new Date().toISOString();
+    await db.ustawMeta('profil', {
+      ...aktualny,
+      disclaimer_accepted_at: aktualny.disclaimer_accepted_at ?? teraz,
+      privacy_accepted_at: aktualny.privacy_accepted_at ?? teraz,
+    });
     dialog.close();
+    if (skonfigurowano) synchronizuj(); // zgoda trafia do profilu na serwerze od razu
     /** @type {HTMLElement} */ ($('#ekran-dzis h1')).focus();
   });
   dialog.showModal();
 }
 
+/**
+ * GitHub Pages nie pozwala ustawić nagłówka frame-ancestors (a w meta CSP jest ignorowany),
+ * więc osadzenie aplikacji w ramce cudzej strony (clickjacking) blokujemy w skrypcie.
+ */
+function osadzonaWRamce() {
+  try { return window.top !== window.self; } catch { return true; }
+}
+
 async function start() {
+  if (osadzonaWRamce()) {
+    document.body.replaceChildren(h('p', { class: 'pusty', text: 'Ze względów bezpieczeństwa Dziennik zdrowia działa tylko otwarty bezpośrednio, nie w ramce innej strony.' }));
+    return;
+  }
   try {
     await db.otworz();
   } catch (e) {

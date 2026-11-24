@@ -1,5 +1,11 @@
 # Konfiguracja GitHub i Supabase (etap 0)
 
+> **Stan od 0.7.0 (24.11.2026), zmiany względem tej instrukcji:**
+> - Repozytorium jest **publiczne**, hosting **GitHub Pages**. GitHub za darmo skanuje sekrety i blokuje push z sekretem: Settings → Code security → włącz *Secret Protection* i *Push protection*.
+> - Migracje wgrywasz **ręcznie w SQL Editorze** (pliki `supabase/migrations/` po kolei). Workflowy `migracje.yml` i `kopia.yml` nie są używane, w repozytorium jest tylko `ci.yml`.
+> - Ustawienia Auth zmieniasz w panelu. W Authentication → URL Configuration wpisz **Site URL** = adres aplikacji na GitHub Pages (`https://<login>.github.io/<repozytorium>/`). Ten sam adres dodaj w Redirect URLs.
+> - Część C (kopie) jest odłożona. Jeśli wróci, kopie w publicznym repozytorium muszą być szyfrowane.
+
 Instrukcja krok po kroku. Zajmie około godziny. Wykonuj kroki po kolei: część B potrzebuje repozytorium z części A, a część C potrzebuje projektu z części B.
 
 To, co da się zapisać w kodzie, jest już w repozytorium. Ręcznie zostaje tylko to, czego nie da się zrobić bez Twojego konta: zakładanie kont i projektów, sekrety, przełączniki w panelach.

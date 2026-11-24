@@ -466,13 +466,29 @@
 
       <section class="sekcja" aria-labelledby="prywatnosc-tytul">
         <h2 id="prywatnosc-tytul">Prywatność</h2>
+        <h3>Co przechowujemy</h3>
         <ul class="punkty">
-          <li>Przechowujemy tylko to, co wpiszesz: sen, samopoczucie, dolegliwości, leki i wyniki badań.</li>
-          <li>Dane są na tym urządzeniu (także bez internetu) oraz na Twoim koncie w bazie Supabase. Dostęp wymaga hasła i kodu z aplikacji, a każdy widzi tylko własne dane.</li>
-          <li>Na urządzeniu dane nie są szyfrowane, więc chroni je blokada ekranu telefonu.</li>
-          <li>Brak analityki i zewnętrznych skryptów.</li>
-          <li>Kopię pobierzesz przyciskiem „Pobierz kopię”. Dane z serwera usuniesz w sekcji „Twoje dane”.</li>
+          <li>Tylko to, co wpiszesz: sen, samopoczucie, dolegliwości, leki, wyniki badań i wysłane pliki. Do tego e-mail konta, imię i strefę czasową.</li>
+          <li>Nie zbieramy lokalizacji, kontaktów ani danych z innych aplikacji. Godziny snu ze Zdrowia na iPhonie trafiają tu tylko wtedy, gdy sama je wkleisz.</li>
         </ul>
+        <h3>Gdzie są dane</h3>
+        <ul class="punkty">
+          <li><strong>Na tym urządzeniu</strong> (także bez internetu). Dane nie są tu szyfrowane, więc chroni je blokada ekranu telefonu.</li>
+          <li><strong>Na Twoim koncie w Supabase</strong>, w regionie Frankfurt (UE). Odczyt wymaga hasła i kodu z aplikacji uwierzytelniającej. Każdy użytkownik widzi tylko własne dane, co wymusza baza danych.</li>
+          <li><strong>Pliki</strong> leżą w prywatnym magazynie. Otwierasz je linkiem ważnym 60 sekund.</li>
+          <li>Osoba, która zarządza projektem Supabase, ma techniczny dostęp do bazy w panelu administracyjnym. Nie przegląda danych i nie przekazuje ich nikomu.</li>
+        </ul>
+        <h3>Czego nie robimy</h3>
+        <ul class="punkty">
+          <li>Brak analityki, reklam, zewnętrznych skryptów i fontów. Dane nie trafiają do osób trzecich.</li>
+          <li>Stronę aplikacji serwuje GitHub Pages: GitHub widzi adres IP przy pobieraniu plików aplikacji, ale nie Twoje wpisy.</li>
+        </ul>
+        <h3>Twoje prawa</h3>
+        <ul class="punkty">
+          <li>Kopię wszystkich danych pobierzesz przyciskiem „Pobierz kopię”.</li>
+          <li>Zgodę wycofasz, usuwając dane z serwera w sekcji „Twoje dane”. Usunięcie samego konta zrobi osoba zarządzająca projektem.</li>
+        </ul>
+        <p class="drobny" id="zgoda-data"></p>
       </section>
 
       <p class="drobny" id="wersja"></p>
@@ -494,10 +510,14 @@
     <form id="form-zastrzezenie" class="dialog__tresc">
       <h2 id="dz-tytul">Zanim zaczniesz</h2>
       <p id="dz-tresc" data-zastrzezenie></p>
-      <p>Twoje wpisy zostają na tym urządzeniu. Nikt poza Tobą ich nie widzi.</p>
+      <p>Twoje wpisy są zapisywane na tym urządzeniu i na Twoim koncie w bazie Supabase (serwery we Frankfurcie, UE). Inni użytkownicy aplikacji ich nie widzą. Szczegóły znajdziesz w Ustawieniach, w części „Prywatność”.</p>
       <label class="zgoda">
         <input type="checkbox" id="dz-zgoda" required>
         <span>Rozumiem, że aplikacja służy do notatek i nie zastępuje lekarza.</span>
+      </label>
+      <label class="zgoda">
+        <input type="checkbox" id="dz-zgoda-dane" required>
+        <span>Zgadzam się na przechowywanie moich danych o zdrowiu na moim koncie. Zgodę mogę wycofać, usuwając dane z serwera.</span>
       </label>
       <div class="dialog__stopka">
         <button type="submit" class="btn btn-glowny" id="dz-akceptuj" disabled>Zaczynam</button>
@@ -721,6 +741,11 @@
       <div class="pola-2">
         <div class="pole"><label for="bad-data">Data pobrania</label><input type="date" id="bad-data" required></div>
         <div class="pole"><label for="bad-lab">Laboratorium</label><input type="text" id="bad-lab" maxlength="80"></div>
+      </div>
+      <div class="pole">
+        <label for="bad-dokument">Dokument <span class="opcjonalne">(opcjonalnie)</span></label>
+        <select id="bad-dokument" aria-describedby="bad-dokument-opis"></select>
+        <p class="drobny" id="bad-dokument-opis">Plik z wynikiem dodasz niżej, w sekcji „Dokumenty”. Przypięty dokument otworzysz przy wyniku.</p>
       </div>
       <div id="bad-wiersze" class="wiersze-badan"></div>
       <button type="button" class="btn btn-drugorzedny btn-maly" id="bad-dodaj-wiersz">Dodaj parametr</button>

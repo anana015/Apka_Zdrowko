@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.7.0 (2026-11-24) — dokument przy wyniku, zgoda na dane, CI
+**Najpierw uruchom migrację `0006_zgoda_prywatnosc.sql` w SQL Editorze.** Bez niej aplikacja działa, ale zgoda zostaje tylko na urządzeniu (w konsoli pojawi się ostrzeżenie).
+
+### Dodano
+- Badania: pole „Dokument” w formularzu wyniku (przypięcie pliku z sekcji Dokumenty; przy zestawie, np. morfologii, do wszystkich parametrów). Przy wyniku przycisk „Dokument” (otwiera plik linkiem ważnym 60 s), a w liście dokumentów informacja „Przypięty do: …”.
+- Usunięcie dokumentu odpina go od wyników. Jeśli plik usunięto na innym urządzeniu, synchronizacja wysyła wynik bez przypięcia zamiast zatrzymywać się na błędzie.
+- Zgoda na przechowywanie danych o zdrowiu na koncie: drugie pole w oknie „Zanim zaczniesz”, zapis w `profiles.privacy_accepted_at` (migracja 0006), data zgody w Ustawieniach. Osoby, które potwierdziły zastrzeżenie wcześniej, zobaczą okno jeszcze raz tylko po to, żeby dopowiedzieć zgodę.
+- Ustawienia → Prywatność: co przechowujemy, gdzie (urządzenie, Supabase Frankfurt, prywatny magazyn plików), kto ma techniczny dostęp, czego nie robimy, jak pobrać kopię i wycofać zgodę.
+- Ochrona przed osadzeniem w ramce cudzej strony (GitHub Pages nie obsługuje nagłówka `frame-ancestors`).
+- CI (`.github/workflows/ci.yml`): ESLint, kontrola typów, aktualność precache i testy. Akcje przypięte do SHA (checkout 7.0.1, setup-node 7.1.0). `.github/dependabot.yml`, `.gitignore` (sekrety, eksporty danych), `.gitleaks.toml` dla lokalnego hooka.
+- ESLint 9 (`eslint.config.js`, `npm run lint`).
+
+### Zmieniono
+- Okno „Zanim zaczniesz” mówiło, że wpisy zostają tylko na urządzeniu. Teraz opisuje też konto w Supabase.
+- Drobne poprawki z ESLint: znak BOM w CSV zapisany jako `\uFEFF`, zbędny komentarz `global` w `sw.js`.
+- Usunięto przypadkowy plik `1` z katalogu głównego.
+
+### Bez zmian (już działało)
+- Logowanie z TOTP, wylogowanie po 30 min nieaktywności, synchronizacja outbox (0.3.0), korelacja leków (0.3.0), dokumenty (0.4.0), zweryfikowana lista objawów alarmowych (0.5.0).
+
 ## 0.6.0 (2026-11-24) — wiedza, ściąga leków, opryszczka
 **Najpierw uruchom migrację `0005_opryszczka.sql` w SQL Editorze.**
 - Ekran „Wiedza”: przy każdym obszarze „Co to może być” (rozwijane karty: jak to zwykle wygląda, co może pomóc, jakie leki, kiedy do lekarza). Ból głowy: napięciowy, migrena, klasterowy, z nadużywania leków. Kręgosłup: zwykły ból pleców, rwa kulszowa, kark. Okolice intymne: zapalenie pęcherza, bolesne miesiączki, drożdżyca, opryszczka, jelita.

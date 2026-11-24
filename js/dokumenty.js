@@ -3,6 +3,7 @@
  * Dokumenty (specyfikacja, sekcje 4.4 i 8): prywatny bucket „dokumenty”, ścieżka {user_id}/{uuid}.{rozszerzenie},
  * otwieranie wyłącznie przez krótkotrwały signed URL (60 s). Pliki wymagają internetu i nie są trzymane offline.
  */
+import * as db from './db.js';
 import { $, h, toast, dwaDotkniecia, uuid } from './utils.js';
 import { ymd, formatPelny } from './obliczenia.js';
 import { klient, biezacyUzytkownik, skonfigurowano } from './auth.js';
@@ -20,6 +21,28 @@ function typPliku(f) {
 }
 
 const dostepne = () => skonfigurowano && klient && biezacyUzytkownik();
+
+/** Ostatnio pobrana lista dokumentów (do wyboru przy wyniku badania). @type {any[]|null} */
+let ostatnie = null;
+
+/** Opis dokumentu do list i pól wyboru. @param {any} d */
+export function nazwaDokumentu(d) {
+  return [d.note || d.file_name, d.doc_date ? formatPelny(d.doc_date) : null].filter(Boolean).join(', ');
+}
+
+/**
+ * Lista dokumentów do przypięcia do wyniku badania. Zwraca null, gdy nie da się jej pobrać
+ * (brak logowania lub internetu) — wtedy formularz zostawia dotychczasowe przypięcie bez zmian.
+ * @returns {Promise<any[]|null>}
+ */
+export async function listaDokumentow() {
+  if (!dostepne() || !navigator.onLine) return ostatnie;
+  const { data, error } = await klient.from('documents').select('id, file_name, note, doc_date, kind, storage_path, created_at')
+    .order('doc_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false });
+  if (error) return ostatnie;
+  ostatnie = data;
+  return data;
+}
 
 export function initDokumenty() {
   /** @type {HTMLInputElement} */ ($('#dok-data')).value = ymd();
@@ -70,9 +93,32 @@ async function wyslij() {
   }
 }
 
-/** Otwiera plik przez link ważny 60 sekund. Okno otwieramy od razu, żeby iPhone go nie zablokował. @param {any} d */
-async function otworz(d) {
+/**
+ * Otwiera dokument przypięty do wyniku badania (po identyfikatorze).
+ * @param {string} id
+ */
+export async function otworzDokument(id) {
+  if (!dostepne()) { toast('Zaloguj się, aby otworzyć dokument.'); return; }
+  if (!navigator.onLine) { toast('Otwarcie dokumentu wymaga internetu.'); return; }
   const okno = window.open('', '_blank');
+  const znany = ostatnie?.find((d) => d.id === id);
+  const { data, error } = znany
+    ? { data: znany, error: null }
+    : await klient.from('documents').select('id, storage_path').eq('id', id).maybeSingle();
+  if (error || !data) {
+    okno?.close();
+    toast(error ? `Nie udało się otworzyć dokumentu: ${error.message}` : 'Tego dokumentu już nie ma.');
+    return;
+  }
+  await otworz(data, okno);
+}
+
+/**
+ * Otwiera plik przez link ważny 60 sekund. Okno otwieramy od razu, żeby iPhone go nie zablokował.
+ * @param {any} d @param {Window|null} [otwarte] okno otwarte wcześniej przez wywołującego
+ */
+async function otworz(d, otwarte) {
+  const okno = otwarte !== undefined ? otwarte : window.open('', '_blank');
   const { data, error } = await klient.storage.from(BUCKET).createSignedUrl(d.storage_path, 60);
   if (error || !data?.signedUrl) {
     okno?.close();
@@ -89,6 +135,10 @@ async function usun(d) {
   if (e1) { toast(`Nie udało się usunąć pliku: ${e1.message}`); return; }
   const { error: e2 } = await klient.from('documents').delete().eq('id', d.id);
   if (e2) { toast(`Nie udało się usunąć wpisu: ${e2.message}`); return; }
+  // Serwer odpina wyniki sam (on delete set null); tu odpinamy je od razu na urządzeniu.
+  for (const w of (await db.wszystkie('lab_results')).filter((x) => x.document_id === d.id)) {
+    await db.zapisz('lab_results', { ...w, document_id: null });
+  }
   toast('Usunięto plik.');
   await renderDokumenty();
 }
@@ -111,17 +161,27 @@ export async function renderDokumenty() {
     lista.replaceChildren(h('li', { class: 'pusty' }, `Nie udało się wczytać dokumentów: ${error.message}`));
     return;
   }
+  ostatnie = data;
   if (!data.length) {
     lista.replaceChildren(h('li', { class: 'pusty' }, 'Nie masz jeszcze dokumentów.'));
     return;
   }
+  /** Nazwy badań przypiętych do każdego dokumentu. @type {Map<string, Set<string>>} */
+  const przypiete = new Map();
+  for (const w of await db.wszystkie('lab_results')) {
+    if (!w.document_id) continue;
+    if (!przypiete.has(w.document_id)) przypiete.set(w.document_id, new Set());
+    przypiete.get(w.document_id)?.add(w.test_name);
+  }
   lista.replaceChildren(...data.map((d) => {
+    const badania = [...(przypiete.get(d.id) ?? [])];
     const przyciskUsun = /** @type {HTMLButtonElement} */ (h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Usuń', 'aria-label': `Usuń plik ${d.file_name}` }));
     dwaDotkniecia(przyciskUsun, () => usun(d), 'Na pewno?');
     return h('li', {},
       h('div', { class: 'lista__tresc' },
         h('p', { class: 'lista__tytul', text: d.note || d.file_name }),
-        h('p', { class: 'lista__opis', text: [RODZAJ[/** @type {keyof typeof RODZAJ} */ (d.kind)], d.doc_date ? formatPelny(d.doc_date) : null, `${Math.max(1, Math.round(d.size_bytes / 1024))} KB`].filter(Boolean).join(', ') })),
+        h('p', { class: 'lista__opis', text: [RODZAJ[/** @type {keyof typeof RODZAJ} */ (d.kind)], d.doc_date ? formatPelny(d.doc_date) : null, `${Math.max(1, Math.round(d.size_bytes / 1024))} KB`].filter(Boolean).join(', ') }),
+        badania.length ? h('p', { class: 'lista__opis', text: `Przypięty do: ${badania.slice(0, 4).join(', ')}${badania.length > 4 ? ` i ${badania.length - 4} innych` : ''}` }) : null),
       h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Otwórz', 'aria-label': `Otwórz plik ${d.file_name}`, on: { click: () => otworz(d) } }),
       przyciskUsun);
   }));

@@ -2,7 +2,9 @@
 
 Prywatna aplikacja PWA do zapisywania snu, nastroju, dolegliwości, leków i wyników badań. Pokazuje wykresy i możliwe zależności w danych. Nie stawia diagnoz i nie zastępuje lekarza.
 
-**Stan: 0.2.0 — szkic aplikacji + konfiguracja GitHub i Supabase jako kod.** Wszystkie ekrany działają na danych zapisanych lokalnie w przeglądarce. Serwer (Supabase), logowanie i synchronizacja dojdą w etapie 0.
+**Stan: 0.7.0.** Logowanie z obowiązkowym TOTP, synchronizacja z Supabase (Frankfurt, UE), działanie offline, dolegliwości z listą objawów alarmowych, leki, badania z dokumentami, wykresy, zależności i raport dla lekarza. Historia zmian: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+
+Hosting: GitHub Pages z publicznego repozytorium. Migracje bazy wgrywa się ręcznie w SQL Editorze Supabase (pliki `supabase/migrations/`, po kolei).
 
 ## Uruchomienie
 
@@ -10,6 +12,7 @@ Prywatna aplikacja PWA do zapisywania snu, nastroju, dolegliwości, leków i wyn
 npm install          # zależności deweloperskie: PGlite (test RLS), TypeScript (kontrola typów)
 npm run serve        # http://localhost:8080
 npm test             # 50 testów: obliczenia, korelacje, flagi, eksport, precache, RLS i MFA, skrypty
+npm run lint         # ESLint
 npm run typecheck    # tsc --checkJs na plikach js/
 npm run precache     # po każdej zmianie plików aplikacji (CI sprawdza aktualność)
 ```
@@ -48,14 +51,17 @@ js/eksport.js       JSON/CSV                                    ← testowane
 js/demo.js          generator danych syntetycznych
 fonts/              Atkinson Hyperlegible Next (OFL), lokalnie
 supabase/config.jsonc ustawienia Auth i API (CLI 3.x)
-supabase/migrations/  0001 tabele i RLS, 0002 Storage, 0003 obowiązkowe MFA
-.github/workflows/    ci.yml, migracje.yml, kopia.yml
+supabase/migrations/  0001 tabele i RLS, 0002 Storage, 0003 obowiązkowe MFA, 0004–0005 rodzaje dolegliwości, 0006 zgoda
+.github/workflows/    ci.yml (lint, typy, precache, testy)
 tests/              node --test
 ```
 
-## Bezpieczeństwo w szkicu
+## Bezpieczeństwo
 
 - CSP bez `unsafe-inline`, brak zewnętrznych skryptów i fontów, brak analityki.
 - Tekst użytkownika zawsze przez `textContent` (bez `innerHTML`).
 - Dane w IndexedDB nie są szyfrowane; chroni je blokada ekranu urządzenia.
-- Lista czerwonych flag jest **wersją roboczą** i wymaga weryfikacji medycznej przed użyciem.
+- Obowiązkowe MFA wymuszone w bazie (polityki `aal2`), RLS na każdej tabeli i w Storage.
+- Blokada osadzania w ramce w `js/app.js` (GitHub Pages nie obsługuje `frame-ancestors`; plik `_headers` działa tylko na Cloudflare Pages/Netlify).
+- Lista objawów alarmowych sprawdzona ze źródłami (NHS, NICE), wersja w `js/flagi.js`.
+- Nigdy nie commituj eksportów danych ani kluczy (`.gitignore`, skan sekretów GitHub).

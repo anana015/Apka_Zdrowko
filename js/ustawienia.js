@@ -116,6 +116,9 @@ export async function render() {
   $('#zastrzezenie-data').textContent = profil.disclaimer_accepted_at
     ? `Potwierdzono ${formatPelny(ymd(new Date(profil.disclaimer_accepted_at)))}, ${hhmm(profil.disclaimer_accepted_at)}.`
     : '';
+  $('#zgoda-data').textContent = profil.privacy_accepted_at
+    ? `Zgoda na przechowywanie danych: ${formatPelny(ymd(new Date(profil.privacy_accepted_at)))}, ${hhmm(profil.privacy_accepted_at)}.`
+    : '';
   $('#wersja').textContent = `Wersja aplikacji ${WERSJA_APLIKACJI}. Lista sytuacji alarmowych ${WERSJA_LISTY}${ZWERYFIKOWANO ? '' : ', wersja robocza przed weryfikacją medyczną'}.`;
 }
 

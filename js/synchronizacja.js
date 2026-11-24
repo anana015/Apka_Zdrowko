@@ -53,6 +53,10 @@ async function wyslij() {
       staryId = dane.id;
       ({ data, error } = await klient.from('daily_entries').upsert({ ...dane, id: istniejacy.id }, { onConflict: 'id' }).select().single());
     }
+    if (error?.code === '23503' && w.tabela === 'lab_results' && dane.document_id) {
+      // Przypięty dokument usunięto na innym urządzeniu: wysyłamy wynik bez przypięcia.
+      ({ data, error } = await klient.from('lab_results').upsert({ ...dane, document_id: null }, { onConflict: 'id' }).select().single());
+    }
     if (error) throw error;
     await db.zatwierdzWyslanie(w.tabela, w.id, w.kiedy, data, staryId);
   }
@@ -94,7 +98,7 @@ async function pobierz() {
   }
 }
 
-/** Profil: imię, strefa czasowa i data potwierdzenia zastrzeżenia (specyfikacja, sekcja 14). */
+/** Profil: imię, strefa czasowa, data potwierdzenia zastrzeżenia i zgody na przechowywanie danych (specyfikacja, sekcja 14). */
 async function synchronizujProfil() {
   const u = biezacyUzytkownik();
   if (!u) return;
@@ -105,10 +109,16 @@ async function synchronizujProfil() {
     display_name: lokalny.display_name ?? serwer?.display_name ?? null,
     timezone: lokalny.timezone ?? serwer?.timezone ?? 'Europe/Warsaw',
     disclaimer_accepted_at: lokalny.disclaimer_accepted_at ?? serwer?.disclaimer_accepted_at ?? null,
+    privacy_accepted_at: lokalny.privacy_accepted_at ?? serwer?.privacy_accepted_at ?? null,
   };
   const rozne = (/** @type {any} */ a) => !a || Object.entries(polaczony).some(([k, v]) => (a[k] ?? null) !== v);
-  if (rozne(serwer)) {
-    const { error: e2 } = await klient.from('profiles').upsert({ id: u.id, ...polaczony }, { onConflict: 'id' });
+  // Bez migracji 0006 serwer nie ma kolumny privacy_accepted_at: wtedy porównujemy i wysyłamy profil bez niej.
+  const maKolumneZgody = !serwer || 'privacy_accepted_at' in serwer;
+  const doSerwera = maKolumneZgody ? polaczony : (({ privacy_accepted_at: _, ...reszta }) => reszta)(polaczony);
+  if (!maKolumneZgody) console.warn('Profil: brak kolumny privacy_accepted_at — uruchom migrację 0006_zgoda_prywatnosc.sql.');
+  const rozneNaSerwerze = !serwer || Object.entries(doSerwera).some(([k, v]) => (serwer[k] ?? null) !== v);
+  if (rozneNaSerwerze) {
+    const { error: e2 } = await klient.from('profiles').upsert({ id: u.id, ...doSerwera }, { onConflict: 'id' });
     if (e2) throw e2;
   }
   if (rozne(lokalny)) await db.ustawMeta('profil', { ...lokalny, ...polaczony });

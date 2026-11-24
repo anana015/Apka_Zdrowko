@@ -1,7 +1,6 @@
 /* Service Worker — cache powłoki aplikacji (działanie offline).
    Lista plików i hash wersji pochodzą z precache-manifest.js, generowanego skryptem:
    npm run precache. Nie edytuj wersji ręcznie. */
-/* global self, caches, importScripts */
 importScripts('./precache-manifest.js');
 
 const { wersja, pliki } = self.PRECACHE;

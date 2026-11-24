@@ -75,7 +75,7 @@ export function poleCSV(v) {
 /** @param {Record<string, any>[]} wiersze @param {readonly string[]} kolumny */
 export function doCSV(wiersze, kolumny) {
   const linie = [kolumny.join(';'), ...wiersze.map((w) => kolumny.map((k) => poleCSV(w[k])).join(';'))];
-  return `﻿${linie.join('\r\n')}\r\n`;
+  return `\uFEFF${linie.join('\r\n')}\r\n`;
 }
 
 /** Pobranie pliku w przeglądarce. @param {string} nazwa @param {string} tresc @param {string} mime */

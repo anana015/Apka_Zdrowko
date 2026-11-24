@@ -8,7 +8,7 @@ import * as db from './db.js';
 import { $, h, toast, otworzDialog, pokazBlad, dwaDotkniecia } from './utils.js';
 import { ymd, formatKrotki, formatPelny, liczbaPL, parsujLiczbe, pozaZakresem, walidujWynik } from './obliczenia.js';
 import { wykresBadania } from './wykresy.js';
-import { initDokumenty, renderDokumenty } from './dokumenty.js';
+import { initDokumenty, renderDokumenty, listaDokumentow, nazwaDokumentu, otworzDokument } from './dokumenty.js';
 
 export const tytul = 'Badania';
 
@@ -108,6 +108,7 @@ function wierszWyniku(w, edycja) {
       h('p', { class: 'lista__tytul' }, `${liczbaPL(w.value, 3)} ${w.unit ?? ''}`, ' ',
         poza === 'ponizej' || poza === 'powyzej' ? h('span', { class: 'znacznik znacznik--poza', text: OPIS_POZA[poza] }) : null),
       h('p', { class: 'lista__opis', text: [formatPelny(w.taken_on), zakres, w.lab_name].filter(Boolean).join(', ') })),
+    w.document_id ? h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Dokument', 'aria-label': `Otwórz dokument wyniku z ${formatKrotki(w.taken_on)}`, on: { click: () => otworzDokument(w.document_id) } }) : null,
     edycja ? h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Edytuj', 'aria-label': `Edytuj wynik z ${formatKrotki(w.taken_on)}`, on: { click: () => otworzBadanie(w.id) } }) : null);
 }
 
@@ -159,6 +160,7 @@ export async function otworzBadanie(id) {
   $('#bad-usun').hidden = !w;
   pole('#bad-data').value = w?.taken_on ?? ymd();
   pole('#bad-lab').value = w?.lab_name ?? (wszystkie.sort((a, b) => (a.taken_on < b.taken_on ? 1 : -1))[0]?.lab_name ?? '');
+  await wypelnijDokumenty(w?.document_id ?? null);
   $('#bad-wiersze').replaceChildren();
   if (w) {
     await dodajWiersz({ nazwa: w.test_name, jednostka: w.unit ?? '', wartosc: liczbaPL(w.value, 6), dol: w.ref_low != null ? liczbaPL(w.ref_low, 6) : '', gora: w.ref_high != null ? liczbaPL(w.ref_high, 6) : '' });
@@ -168,6 +170,34 @@ export async function otworzBadanie(id) {
   }
   wyjdzZPodgladu();
   otworzDialog(/** @type {HTMLDialogElement} */ ($('#dialog-badanie')));
+}
+
+/**
+ * Pole wyboru dokumentu. Bez internetu lista jest niedostępna: pole jest wyłączone,
+ * a zapis zostawia dotychczasowe przypięcie.
+ * @param {string|null} biezacy
+ */
+async function wypelnijDokumenty(biezacy) {
+  const select = /** @type {HTMLSelectElement} */ ($('#bad-dokument'));
+  const dokumenty = await listaDokumentow();
+  if (!dokumenty) {
+    select.replaceChildren(h('option', { value: biezacy ?? '', text: biezacy ? 'Przypięty dokument (lista wymaga internetu)' : 'Lista dokumentów wymaga internetu i logowania' }));
+    select.disabled = true;
+    return;
+  }
+  select.disabled = false;
+  select.replaceChildren(
+    h('option', { value: '', text: 'Bez dokumentu' }),
+    ...dokumenty.map((d) => h('option', { value: d.id, text: nazwaDokumentu(d), selected: d.id === biezacy })),
+  );
+  if (biezacy && !dokumenty.some((d) => d.id === biezacy)) select.value = ''; // plik usunięto
+}
+
+/** Wybrany dokument; gdy lista jest niedostępna — dotychczasowy. */
+function wybranyDokument() {
+  const select = /** @type {HTMLSelectElement} */ ($('#bad-dokument'));
+  if (select.disabled) return edytowany?.document_id ?? null;
+  return select.value || null;
 }
 
 function wyjdzZPodgladu() {
@@ -183,6 +213,7 @@ async function sprawdz() {
   if (!data) { pokazBlad(blad, 'Podaj datę pobrania.'); pole('#bad-data').focus(); return; }
   if (data > ymd()) { pokazBlad(blad, 'Data pobrania nie może być w przyszłości.'); pole('#bad-data').focus(); return; }
   const lab = pole('#bad-lab').value.trim() || null;
+  const dokument = wybranyDokument();
   const poprzednie = (await db.wszystkie('lab_results')).filter((x) => x.id !== edytowany?.id);
   /** @type {string[]} */ const bledy = [];
   /** @type {string[]} */ const ostrzezenia = [];
@@ -192,7 +223,7 @@ async function sprawdz() {
     if (!v('nazwa') && !v('wartosc')) continue;
     const r = {
       ...(edytowany ?? {}),
-      taken_on: data, lab_name: lab,
+      taken_on: data, lab_name: lab, document_id: dokument,
       test_name: v('nazwa'), value: parsujLiczbe(v('wartosc')), unit: v('jednostka') || null,
       ref_low: parsujLiczbe(v('dol')), ref_high: parsujLiczbe(v('gora')),
     };
@@ -218,6 +249,7 @@ async function sprawdz() {
       return h('li', { text: `${r.test_name}: ${liczbaPL(r.value, 3)} ${r.unit ?? ''}${zakres}${poza === 'ponizej' || poza === 'powyzej' ? `, ${OPIS_POZA[poza]}` : ''}` });
     })),
     ...(ostrzezenia.length ? [h('ul', {}, ostrzezenia.map((o) => h('li', { class: 'ostrzezenie', text: o })))] : []),
+    dokument ? h('p', { class: 'drobny', text: `Dokument: ${/** @type {HTMLSelectElement} */ ($('#bad-dokument')).selectedOptions[0]?.text ?? 'przypięty'}` }) : null,
   );
   podglad.hidden = false;
   $('#bad-zapisz').textContent = 'Zapisz';
