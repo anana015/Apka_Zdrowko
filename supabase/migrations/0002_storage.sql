@@ -17,3 +17,10 @@ create policy dokumenty_zapis on storage.objects
 create policy dokumenty_usuwanie on storage.objects
   for delete to authenticated
   using (bucket_id = 'dokumenty' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+-- Wymuszenie MFA także dla plików: polityka restrykcyjna łączy się warunkiem AND z powyższymi.
+create policy dokumenty_wymagane_mfa on storage.objects
+  as restrictive
+  for all to authenticated
+  using (bucket_id <> 'dokumenty' or (select auth.jwt() ->> 'aal') = 'aal2')
+  with check (bucket_id <> 'dokumenty' or (select auth.jwt() ->> 'aal') = 'aal2');

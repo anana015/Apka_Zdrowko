@@ -247,15 +247,15 @@ export async function render() {
 }
 
 /** @param {Awaited<ReturnType<typeof db.wczytajWszystko>>} dane */
-function renderZaleznosci({ wpisy, epizody }) {
+function renderZaleznosci({ wpisy, epizody, leki, przyjecia }) {
   const kontener = $('#zaleznosci');
-  const klucz = [wpisy.length, epizody.length, ...wpisy.map((w) => w.updated_at), ...epizody.map((e) => e.updated_at)].sort().join('|');
+  const klucz = [wpisy.length, epizody.length, leki.length, przyjecia.length, ...wpisy.map((w) => w.updated_at), ...epizody.map((e) => e.updated_at), ...leki.map((l) => l.updated_at)].sort().join('|');
   if (klucz === ostatniKluczZaleznosci && kontener.childElementCount) return;
   ostatniKluczZaleznosci = klucz;
   kontener.replaceChildren(h('p', { class: 'drobny', text: 'Liczę zależności…' }));
   // Obliczenia (~0,3 s dla 90 dni) po narysowaniu ekranu, żeby nie blokować interfejsu.
   setTimeout(() => {
-    const w = analizujZaleznosci({ wpisy, epizody });
+    const w = analizujZaleznosci({ wpisy, epizody, leki, przyjecia });
     if (w.status === 'za_malo_danych') {
       kontener.replaceChildren(h('p', { class: 'pusty', text:
         `Za mało danych, by szukać zależności. Masz ${w.dni} dni z wpisem (potrzeba ${w.progi.minDni}) i ${w.epizody} epizodów bólu głowy (potrzeba ${w.progi.minEpizodow}).` }));
@@ -285,6 +285,18 @@ async function drukujRaport() {
   const dane = await db.wczytajWszystko();
   const profil = (await db.meta('profil', {})) ?? {};
   const seria = seriaDzienna({ wpisy: dane.wpisy, epizody: dane.epizody, od, do_ });
+  const zal = analizujZaleznosci({
+    wpisy: dane.wpisy.filter((w) => w.entry_date >= od && w.entry_date <= do_),
+    epizody: dane.epizody.filter((e) => dzienEpizodu(e) >= od && dzienEpizodu(e) <= do_),
+    leki: dane.leki,
+    przyjecia: dane.przyjecia,
+  });
+  const sekcjaZaleznosci = h('section', {}, h('h2', { text: 'Zależności w danych (obserwacje, nie dowód przyczyny)' }),
+    zal.status === 'za_malo_danych'
+      ? h('p', { text: `Za mało danych w tym okresie (${zal.dni} dni z wpisem, ${zal.epizody} epizodów bólu głowy; potrzeba ${zal.progi.minDni} i ${zal.progi.minEpizodow}).` })
+      : zal.wyniki.length
+        ? h('ul', {}, zal.wyniki.map((r) => h('li', { text: r.zdanie })))
+        : h('p', { text: `Sprawdzono ${zal.liczbaTestow} możliwych zależności; żadna nie przekroczyła progu wielkości efektu.` }));
   const p = podsumowanieOkresu({ ...dane, od, do_ });
   const lekPoId = new Map(dane.leki.map((l) => [l.id, l]));
   const objaw = (/** @type {string} */ id) => OBJAWY.find((o) => o.id === id)?.etykieta ?? null;
@@ -318,6 +330,7 @@ async function drukujRaport() {
     wyniki.length ? h('section', {}, h('h2', { text: 'Wyniki badań' }), tabela(['Data', 'Badanie', 'Wynik', 'Zakres laboratorium', 'Laboratorium'],
       wyniki.map((w) => [formatKrotki(w.taken_on), w.test_name, `${liczbaPL(w.value, 3)} ${w.unit ?? ''}`,
         w.ref_low != null || w.ref_high != null ? `${liczbaPL(w.ref_low, 3)}–${liczbaPL(w.ref_high, 3)}` : null, w.lab_name]))) : null,
+    sekcjaZaleznosci,
     h('section', {}, h('h2', { text: 'Wpisy dzienne' }), tabela(['Data', 'Sen', 'Jakość', 'Nastrój', 'Energia', 'Stres', 'Znaczniki'],
       wpisy.map((w) => [formatKrotki(w.entry_date), formatGodziny(snuZWpisu(w)), w.sleep_quality, w.mood, w.energy, w.stress, (w.tags ?? []).join(', ') || null]))),
     h('p', { class: 'drobny', text: ZASTRZEZENIE }),

@@ -12,7 +12,7 @@
  *  - zawsze n, okres i zdanie „to obserwacja, nie dowód przyczyny”.
  * Generator losowy jest deterministyczny (ziarno), więc wyniki są powtarzalne i testowalne.
  */
-import { dodajDni, dzienEpizodu, czyBolGlowy, snuZWpisu } from './obliczenia.js';
+import { dodajDni, dzienEpizodu, czyBolGlowy, snuZWpisu, ymd } from './obliczenia.js';
 
 export const PROGI = Object.freeze({
   minDni: 30,
@@ -186,9 +186,9 @@ const KIEDY = ['tego samego dnia', 'następnego dnia'];
 
 /**
  * Główna funkcja: lista zależności do pokazania.
- * @param {{ wpisy: import('./obliczenia.js').Wpis[], epizody: import('./obliczenia.js').Epizod[], opcje?: Partial<typeof PROGI> }} p
+ * @param {{ wpisy: import('./obliczenia.js').Wpis[], epizody: import('./obliczenia.js').Epizod[], leki?: import('./obliczenia.js').Lek[], przyjecia?: import('./obliczenia.js').Przyjecie[], opcje?: Partial<typeof PROGI> }} p
  */
-export function analizujZaleznosci({ wpisy, epizody, opcje = {} }) {
+export function analizujZaleznosci({ wpisy, epizody, leki = [], przyjecia = [], opcje = {} }) {
   const P = { ...PROGI, ...opcje };
   const rng = mulberry32(P.ziarno);
 
@@ -297,6 +297,46 @@ export function analizujZaleznosci({ wpisy, epizody, opcje = {} }) {
     }
   }
 
+  // --- 2b. Lek lub suplement (przyjmowany w ciągu ostatnich 7 dni) → ból głowy i nastrój ---
+  // Pomijamy leki doraźne: bierze się je zwykle z powodu bólu, więc zależność byłaby odwrócona.
+  const OKNO = 7;
+  for (const lek of leki) {
+    if (lek.schedule?.type === 'as_needed') continue;
+    const dniPrzyjec = new Set(przyjecia.filter((p) => p.medication_id === lek.id).map((p) => ymd(new Date(p.taken_at))));
+    if (dniPrzyjec.size < P.minGrupa) continue;
+    const ekspozycja = (/** @type {string} */ data) => {
+      for (let k = 0; k <= OKNO; k++) if (dniPrzyjec.has(dodajDni(data, -k))) return true;
+      return false;
+    };
+    const uwaga = 'Porównywane są różne okresy, więc na wynik mogą wpływać też inne zmiany w tym czasie.';
+    /** @type {boolean[]} */ const A = [], B = [];
+    /** @type {string[]} */ const datyA = [], datyB = [];
+    /** @type {number[]} */ const xs = [], ys = [];
+    /** @type {string[]} */ const daty = [];
+    for (const d of dni) {
+      const e = ekspozycja(d.data);
+      (e ? A : B).push(d.bol);
+      (e ? datyA : datyB).push(d.data);
+      if (d.nastroj != null) { xs.push(e ? 1 : 0); ys.push(d.nastroj); daty.push(d.data); }
+    }
+    if (A.length >= P.minGrupa && B.length >= P.minGrupa) {
+      const t = testRoznicyOdsetkow(A, B, P, rng);
+      testy.push({
+        id: `lek:${lek.id}|bol`, typ: 'roznica', lag: 0, ...t, A, B, datyA, datyB, uwaga,
+        budujZdanie: (/** @type {string} */ pa, /** @type {string} */ pb) => `W okresach, gdy w ciągu poprzednich ${OKNO} dni przyjmowano „${lek.name}”, ból głowy wystąpił w ${pa} dni, a w pozostałe dni w ${pb}`,
+      });
+    }
+    if (xs.filter((x) => x === 1).length >= P.minGrupa && xs.filter((x) => x === 0).length >= P.minGrupa) {
+      const t = testSpearmana(xs, ys, P, rng);
+      if (t) {
+        testy.push({
+          id: `lek:${lek.id}|nastroj`, typ: 'spearman', lag: 0, ...t, xs, ys, daty, uwaga,
+          zdanieWlasne: (/** @type {number} */ rho) => `W okresach przyjmowania „${lek.name}” (w ciągu poprzednich ${OKNO} dni) nastrój był zwykle ${rho > 0 ? 'lepszy' : 'gorszy'} niż w pozostałe dni`,
+        });
+      }
+    }
+  }
+
   // --- 3. Korekta na wielokrotne porównania ---
   const q = benjaminiHochberg(testy.map((t) => t.p));
   testy.forEach((t, i) => { t.q = q[i]; });
@@ -310,8 +350,10 @@ export function analizujZaleznosci({ wpisy, epizody, opcje = {} }) {
       if (t.typ === 'roznica') {
         zdanie = `${t.budujZdanie(proc(t.pa), proc(t.pb), t.lag)} (n = ${t.n} dni; różnica ${pp(t.efekt)} pp, 95% CI od ${pp(t.ci[0])} do ${pp(t.ci[1])} pp).`;
       } else {
-        const wynik = t.efekt > 0 ? t.opis.wynikWyzej : t.opis.wynikNizej;
-        zdanie = `Im ${t.opis.czynnik}, tym zwykle ${wynik} ${KIEDY[t.lag]} (ρ = ${dwa(t.efekt)}; 95% CI od ${dwa(t.ci[0])} do ${dwa(t.ci[1])}; n = ${t.n} dni).`;
+        const poczatek = t.zdanieWlasne
+          ? t.zdanieWlasne(t.efekt)
+          : `Im ${t.opis.czynnik}, tym zwykle ${t.efekt > 0 ? t.opis.wynikWyzej : t.opis.wynikNizej} ${KIEDY[t.lag]}`;
+        zdanie = `${poczatek} (ρ = ${dwa(t.efekt)}; 95% CI od ${dwa(t.ci[0])} do ${dwa(t.ci[1])}; n = ${t.n} dni).`;
       }
       return {
         id: t.id,
@@ -323,7 +365,7 @@ export function analizujZaleznosci({ wpisy, epizody, opcje = {} }) {
         p: t.p,
         q: t.q,
         zdanie,
-        ostrzezenie: ZDANIE_OSTRZEGAWCZE,
+        ostrzezenie: t.uwaga ? `${ZDANIE_OSTRZEGAWCZE} ${t.uwaga}` : ZDANIE_OSTRZEGAWCZE,
         powtarzalny,
         sugestia: powtarzalny ? 'Ten wzór widać w obu połowach okresu. Warto omówić go z lekarzem.' : null,
       };

@@ -1,6 +1,6 @@
 // Plik generowany przez scripts/generuj-precache.mjs — nie edytuj ręcznie.
 self.PRECACHE = {
-  "wersja": "1aeda986ce5f",
+  "wersja": "5c550535db7c",
   "pliki": [
     "./",
     "./css/style.css",
@@ -13,6 +13,7 @@ self.PRECACHE = {
     "./icons/icon.svg",
     "./index.html",
     "./js/app.js",
+    "./js/auth.js",
     "./js/badania.js",
     "./js/db.js",
     "./js/demo.js",
@@ -25,10 +26,12 @@ self.PRECACHE = {
     "./js/leki.js",
     "./js/obliczenia.js",
     "./js/offline.js",
+    "./js/synchronizacja.js",
     "./js/tagi.js",
     "./js/teksty.js",
     "./js/ustawienia.js",
     "./js/utils.js",
+    "./js/vendor/supabase.js",
     "./js/wpis.js",
     "./js/wykresy.js",
     "./manifest.webmanifest"

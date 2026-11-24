@@ -15,6 +15,8 @@ import * as leki from './leki.js';
 import * as badania from './badania.js';
 import * as ustawienia from './ustawienia.js';
 import { zainicjujEpizody } from './dolegliwosci.js';
+import { skonfigurowano, zainicjujLogowanie, zdarzeniaAuth } from './auth.js';
+import { startSynchronizacji, uruchomHarmonogram } from './synchronizacja.js';
 
 /** @type {Record<string, { init?: () => void, render: (p: URLSearchParams) => Promise<void>|void, odswiez?: () => Promise<void>|void, tytul: string }>} */
 const EKRANY = { dzis, historia, wykresy, leki, badania, ustawienia };
@@ -138,6 +140,19 @@ async function start() {
   await przejdz(true);
   await odswiezFlagi();
   zainicjujOffline();
+  if (skonfigurowano) {
+    // Każde logowanie (także po wylogowaniu z powodu nieaktywności) uruchamia synchronizację.
+    /** @type {() => void} */ let gotowe = () => {};
+    const poPierwszymLogowaniu = new Promise((r) => { gotowe = /** @type {() => void} */ (r); });
+    zdarzeniaAuth.addEventListener('zalogowano', async (e) => {
+      await startSynchronizacji(/** @type {CustomEvent} */ (e).detail);
+      uruchomHarmonogram();
+      await przejdz(true); // formularz Dziś mógł dostać wpis z innego urządzenia
+      gotowe();
+    });
+    zainicjujLogowanie();
+    await poPierwszymLogowaniu; // zastrzeżenie dopiero po pobraniu profilu z serwera
+  }
   await sprawdzZastrzezenie();
 }
 

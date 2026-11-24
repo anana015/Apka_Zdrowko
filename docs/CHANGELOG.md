@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.3.0 (2026-11-24) — logowanie, synchronizacja, zależności z lekami
+
+### Dodano
+- Ekran logowania: e-mail + hasło, potem obowiązkowy kod TOTP. Pierwsze logowanie prowadzi przez dodanie aplikacji z kodami (przycisk otpauth, kod QR, klucz do wpisania).
+- Wylogowanie po 30 minutach bez aktywności (`LIMIT_NIEAKTYWNOSCI_MIN` w `js/auth.js`), także po ponownym otwarciu aplikacji.
+- Synchronizacja (`js/synchronizacja.js`): wysyłka kolejki zmian, pobieranie danych i usunięć z innych urządzeń, scalanie wpisu z tego samego dnia, profil (imię, strefa, potwierdzenie zastrzeżenia). Automatycznie: po zmianach, po powrocie sieci, przy otwarciu i co 5 minut.
+- Status w górnym pasku: „Zapisano lokalnie” / „Synchronizuję…” / „Zsynchronizowano” / błąd, z przyciskiem „Synchronizuj teraz”.
+- Przy pierwszym logowaniu na urządzeniu z danymi sprzed logowania: wybór „wyślij na konto” albo „usuń”. Inne konto na tym samym urządzeniu nie dostaje cudzych danych.
+- Ustawienia → Konto: e-mail, wylogowanie, synchronizacja, usunięcie wszystkich swoich danych z serwera.
+- Zależności: para „lek lub suplement przyjmowany w ciągu 7 dni → ból głowy i nastrój” (bez leków doraźnych, z uwagą o porównywaniu różnych okresów).
+- Raport dla lekarza: sekcja zależności z wybranego okresu.
+- `js/vendor/supabase.js` (supabase-js 2.119.2, UMD) z sumą SHA-256 w `js/vendor/SHA256SUMS`.
+
+### Zmieniono
+- Gdy serwer jest skonfigurowany, nie ma przycisku danych przykładowych (trafiłyby na konto), a „Usuń dane z tego urządzenia” wylogowuje.
+
+### Ograniczenia
+- Logowanie wymaga internetu; zalogowana sesja działa offline.
+- Konflikt edycji tego samego wpisu na dwóch urządzeniach: wygrywa urządzenie, które wyśle później, bez osobnego ostrzeżenia.
+
+## 0.2.0 (2026-11-24) — konfiguracja GitHub i Supabase
+
+### Dodano
+- `supabase/config.jsonc` (Supabase CLI 3.4.0 w devDependencies): rejestracja wyłączona, hasło min. 12 znaków, TOTP włączone, potwierdzanie e-maila i bezpieczna zmiana hasła, Data API tylko dla `public`, nowe tabele bez automatycznego dostępu.
+- Migracja `0003_mfa_i_uprawnienia.sql`: restrykcyjne polityki `aal2` na wszystkich tabelach (obowiązkowe MFA wymuszone w bazie), odebranie domyślnych uprawnień dla nowych obiektów, automatyczny profil po utworzeniu konta.
+- `0002_storage.sql`: wymóg `aal2` także dla plików w buckecie `dokumenty`.
+- GitHub Actions: CI ze skanem sekretów (gitleaks, suma SHA-256), wdrażanie migracji (podgląd automatycznie, wdrożenie ręcznie słowem `ZASTOSUJ`), codzienna kopia bazy szyfrowana `age`. Akcje przypięte do pełnych SHA.
+- `.github/dependabot.yml`, `.gitleaks.toml`, hook `scripts/git-hooks/pre-commit`.
+- `scripts/ustaw-supabase.mjs` i `js/konfiguracja.js`: adres projektu i klucz publikowalny w konfiguracji i CSP jednym poleceniem; odrzuca klucz sekretny i `service_role`.
+- `docs/konfiguracja.md`: instrukcja krok po kroku.
+- Testy: 50 (w tym MFA `aal1`/`aal2`, polityki na każdej tabeli, uprawnienia domyślne, profil, skrypt konfiguracji).
+
+### Zmieniono
+- `0001_schemat.sql`: funkcja `ustaw_updated_at` ze stałym `search_path` (zalecenie Security Advisora). Migracje nie były jeszcze wdrożone, więc zmiana jest bezpieczna.
+
+### Sprawdzono
+- Migracje 0001–0003 na PostgreSQL 16 z atrapą Auth i Storage, wgrane przez `supabase db push`; zachowanie polityk Storage (własny folder, wymóg `aal2`).
+- Workflowy zgodne ze schematem GitHub Actions (action-validator). Skan gitleaks nie był uruchamiany lokalnie; pierwszy raz uruchomi się w CI.
+
+### Różnice wobec specyfikacji
+- Secret scanning GitHub niedostępny dla prywatnych repozytoriów na koncie osobistym → gitleaks.
+- Limity czasu sesji Supabase tylko w planie Pro → wylogowanie po nieaktywności zrobimy w aplikacji.
+- Klucz `anon` wycofywany do końca 2026 r. → klucz publikowalny `sb_publishable_…`.
+
 ## 0.1.0-szkic (2026-11-23)
 
 Pierwszy szkic aplikacji na podstawie specyfikacji v0.1. Dane wyłącznie lokalnie (IndexedDB), bez serwera.

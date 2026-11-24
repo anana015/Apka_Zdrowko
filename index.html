@@ -16,6 +16,7 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="preload" href="fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/vendor/supabase.js" defer></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -53,6 +54,48 @@
       </a>
     </div>
   </header>
+
+  <!-- ===== LOGOWANIE (hasło + kod TOTP) ===== -->
+  <section id="logowanie" class="logowanie" aria-labelledby="log-tytul" hidden>
+    <div class="logowanie__karta">
+      <img src="icons/icon.svg" alt="" width="56" height="56">
+      <h1 id="log-tytul">Dziennik zdrowia</h1>
+      <form id="log-form-haslo" novalidate>
+        <p id="log-powod" class="drobny">Zaloguj się, aby zobaczyć swoje wpisy.</p>
+        <div class="pole">
+          <label for="log-email">E-mail</label>
+          <input type="email" id="log-email" autocomplete="username" required>
+        </div>
+        <div class="pole">
+          <label for="log-haslo">Hasło</label>
+          <input type="password" id="log-haslo" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-glowny">Zaloguj</button>
+      </form>
+      <form id="log-form-kod" novalidate hidden>
+        <p id="log-kod-opis">Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej.</p>
+        <div id="log-rejestracja" hidden>
+          <ol class="punkty">
+            <li>Otwórz aplikację do kodów (np. Hasła w iPhonie, Google Authenticator, Microsoft Authenticator).</li>
+            <li>Dodaj konto: dotknij przycisku poniżej, zeskanuj kod QR z innego urządzenia albo wpisz klucz ręcznie.</li>
+            <li>Wpisz 6-cyfrowy kod, który pokaże aplikacja.</li>
+          </ol>
+          <a class="btn btn-drugorzedny" id="log-otpauth" href="#">Dodaj do aplikacji z kodami</a>
+          <img id="log-qr" alt="Kod QR do zeskanowania w aplikacji z kodami" width="200" height="200">
+          <p class="drobny">Klucz do wpisania ręcznie: <code id="log-sekret"></code></p>
+        </div>
+        <div class="pole">
+          <label for="log-kod">Kod</label>
+          <input id="log-kod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+        </div>
+        <div class="przyciski">
+          <button type="submit" class="btn btn-glowny">Potwierdź</button>
+          <button type="button" class="btn btn-drugorzedny" id="log-anuluj">Wróć</button>
+        </div>
+      </form>
+      <p class="blad" id="log-blad" role="alert" hidden></p>
+    </div>
+  </section>
 
   <div id="baner-flag" class="baner-flag" hidden></div>
 
@@ -328,7 +371,7 @@
 
       <section class="sekcja" aria-labelledby="konto-tytul">
         <h2 id="konto-tytul">Konto i bezpieczeństwo</h2>
-        <p class="pusty">Logowanie, weryfikacja dwuetapowa (TOTP) i synchronizacja między urządzeniami pojawią się po podłączeniu serwera w UE. Do tego czasu dane są zapisane tylko w tej przeglądarce i nie są szyfrowane, więc chroni je blokada ekranu urządzenia.</p>
+        <div id="konto-stan"></div>
       </section>
 
       <section class="sekcja" aria-labelledby="dane-tytul">
@@ -346,13 +389,13 @@
         <div class="pole">
           <label for="import-plik">Wczytaj kopię z pliku JSON</label>
           <input type="file" id="import-plik" accept="application/json,.json">
-          <p class="drobny">Wczytanie kopii zastępuje wszystkie dane na tym urządzeniu.</p>
+          <p class="drobny" id="import-opis">Wczytanie kopii zastępuje wszystkie dane na tym urządzeniu.</p>
         </div>
         <div class="przyciski">
           <button type="button" class="btn btn-drugorzedny" id="dane-demo">Wczytaj dane przykładowe</button>
           <button type="button" class="btn btn-niebezpieczny" id="dane-usun">Usuń wszystkie dane</button>
         </div>
-        <p class="drobny">Dane przykładowe są wymyślone (90 dni) i zastępują Twoje dane. Służą do obejrzenia wykresów i zależności.</p>
+        <p class="drobny" id="demo-opis">Dane przykładowe są wymyślone (90 dni) i zastępują Twoje dane. Służą do obejrzenia wykresów i zależności.</p>
         <p class="pasek-zapisu__stan" id="dane-stan" role="status"></p>
       </section>
 
@@ -366,9 +409,10 @@
         <h2 id="prywatnosc-tytul">Prywatność</h2>
         <ul class="punkty">
           <li>Przechowujemy tylko to, co wpiszesz: sen, samopoczucie, dolegliwości, leki i wyniki badań.</li>
-          <li>W tej wersji dane są wyłącznie w pamięci tej przeglądarki (IndexedDB). Nic nie jest wysyłane.</li>
+          <li>Dane są na tym urządzeniu (także bez internetu) oraz na Twoim koncie w bazie Supabase. Dostęp wymaga hasła i kodu z aplikacji, a każdy widzi tylko własne dane.</li>
+          <li>Na urządzeniu dane nie są szyfrowane, więc chroni je blokada ekranu telefonu.</li>
           <li>Brak analityki i zewnętrznych skryptów.</li>
-          <li>Kopię pobierzesz przyciskiem „Pobierz kopię”, a wszystko usuniesz przyciskiem „Usuń wszystkie dane”.</li>
+          <li>Kopię pobierzesz przyciskiem „Pobierz kopię”. Dane z serwera usuniesz w sekcji „Twoje dane”.</li>
         </ul>
       </section>
 

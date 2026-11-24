@@ -549,3 +549,20 @@ th { font-weight: 700; color: var(--tekst-2); }
   .raport .wykres .bol-tekst { fill: #fff; }
   .raport section { break-inside: avoid; }
 }
+
+/* ---------- Logowanie ---------- */
+.logowanie {
+  position: fixed; inset: 0; z-index: 70; overflow-y: auto;
+  background: var(--tlo); display: grid; place-items: start center;
+  padding: max(2rem, env(safe-area-inset-top)) 1rem 2rem;
+}
+.logowanie__karta { width: min(26rem, 100%); margin-top: 6vh; }
+.logowanie__karta > img { display: block; border-radius: 14px; margin-bottom: 1rem; }
+.logowanie__karta form { margin-top: 1rem; }
+.logowanie__karta .btn-glowny { width: 100%; }
+.logowanie__karta .przyciski .btn { flex: 1; }
+#log-qr { display: block; margin: 1rem 0 0.5rem; background: #fff; padding: 8px; border-radius: var(--r-sredni); }
+#log-sekret { word-break: break-all; font-size: 0.9375rem; }
+#log-kod { font-size: 1.5rem; letter-spacing: 0.3em; text-align: center; font-weight: 700; }
+body.zablokowane .gora, body.zablokowane main, body.zablokowane .nawigacja, body.zablokowane #baner-flag { display: none; }
+.status[data-stan="ok"] .status__kropka { background: var(--ok); }

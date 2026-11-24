@@ -1,0 +1,12 @@
+#!/bin/sh
+# Lokalny skan sekretów przed commitem.
+# Włączenie (raz, w katalogu repozytorium):  git config core.hooksPath scripts/git-hooks
+# Wymaga gitleaks: https://github.com/gitleaks/gitleaks#installing
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks git --pre-commit --staged --redact --config .gitleaks.toml; then
+    echo "Commit zatrzymany: gitleaks znalazł możliwy sekret. Usuń go z plików i spróbuj ponownie."
+    exit 1
+  fi
+else
+  echo "Uwaga: brak gitleaks, commit bez lokalnego skanu sekretów (CI sprawdzi historię po wysłaniu)."
+fi

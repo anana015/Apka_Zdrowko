@@ -1,6 +1,6 @@
 {
   "name": "dziennik-zdrowia",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Prywatna aplikacja PWA: sen, nastrój, dolegliwości, leki, badania.",
   "type": "module",
@@ -9,13 +9,16 @@
     "precache": "node scripts/generuj-precache.mjs",
     "precache:check": "node scripts/generuj-precache.mjs --check",
     "serve": "python3 -m http.server 8080",
-    "typecheck": "tsc -p jsconfig.json"
+    "typecheck": "tsc -p jsconfig.json",
+    "ustaw-supabase": "node scripts/ustaw-supabase.mjs",
+    "supabase": "supabase"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.6.0",
+    "supabase": "3.4.0",
     "typescript": "^5.9.3"
   }
 }

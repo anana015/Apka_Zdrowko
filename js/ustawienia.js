@@ -8,6 +8,8 @@ import { zbudujEksport, sprawdzImport, doCSV, pobierzPlik, KOLUMNY, TABELE_EKSPO
 import { generujDaneDemo } from './demo.js';
 import { WERSJA_APLIKACJI, DOMYSLNE_TAGI } from './teksty.js';
 import { WERSJA_LISTY, ZWERYFIKOWANO } from './flagi.js';
+import { skonfigurowano, biezacyUzytkownik, wyloguj, LIMIT_NIEAKTYWNOSCI_MIN } from './auth.js';
+import { synchronizuj, usunDaneZSerwera } from './synchronizacja.js';
 
 export const tytul = 'Ustawienia';
 
@@ -42,6 +44,14 @@ export function init() {
   $('#eksport-csv').addEventListener('click', eksportujCSV);
   $('#import-plik').addEventListener('change', wczytajPlik);
 
+  if (skonfigurowano) {
+    // Z kontem na serwerze dane przykładowe trafiłyby na konto, więc ich nie oferujemy.
+    $('#dane-demo').hidden = true;
+    $('#demo-opis').hidden = true;
+    $('#import-opis').textContent = 'Wczytanie kopii zastępuje dane na tym urządzeniu i wysyła je na Twoje konto. Wpisy z serwera, których nie ma w kopii, zostaną.';
+    $('#dane-usun').textContent = 'Usuń dane z tego urządzenia';
+  }
+
   dwaDotkniecia(/** @type {HTMLButtonElement} */ ($('#dane-demo')), async () => {
     const d = generujDaneDemo();
     await db.zastapWszystko(d, { tagi: d.tagi });
@@ -51,12 +61,41 @@ export function init() {
 
   dwaDotkniecia(/** @type {HTMLButtonElement} */ ($('#dane-usun')), async () => {
     await db.wyczyscWszystko();
+    if (skonfigurowano) await wyloguj();
     location.hash = '#dzis';
     location.reload();
-  }, 'Usunąć wszystko z tego urządzenia?');
+  }, skonfigurowano ? 'Niewysłane zmiany przepadną. Usunąć?' : 'Usunąć wszystko z tego urządzenia?');
+}
+
+function renderKonto() {
+  const kontener = $('#konto-stan');
+  const u = biezacyUzytkownik();
+  if (!skonfigurowano || !u) {
+    kontener.replaceChildren(h('p', { class: 'pusty', text: 'Serwer nie jest skonfigurowany: dane są tylko na tym urządzeniu.' }));
+    return;
+  }
+  const usunSerwer = /** @type {HTMLButtonElement} */ (h('button', { type: 'button', class: 'btn btn-niebezpieczny', text: 'Usuń moje dane z serwera' }));
+  dwaDotkniecia(usunSerwer, async () => {
+    try {
+      await usunDaneZSerwera();
+      toast('Usunięto Twoje dane z serwera i z tego urządzenia.');
+    } catch (e) {
+      toast(`Nie udało się usunąć danych: ${/** @type {Error} */ (e).message}`);
+    }
+  }, 'Tego nie da się cofnąć. Usunąć?');
+  kontener.replaceChildren(
+    h('p', {}, 'Zalogowano jako ', h('strong', { text: u.email ?? '' }), '.'),
+    h('p', { class: 'drobny', text: `Logowanie wymaga hasła i kodu z aplikacji z kodami. Po ${LIMIT_NIEAKTYWNOSCI_MIN} minutach bez aktywności aplikacja wyloguje Cię automatycznie.` }),
+    h('div', { class: 'przyciski' },
+      h('button', { type: 'button', class: 'btn btn-drugorzedny', text: 'Synchronizuj teraz', on: { click: () => synchronizuj() } }),
+      h('button', { type: 'button', class: 'btn btn-drugorzedny', text: 'Wyloguj', on: { click: () => wyloguj('Wylogowano.') } })),
+    h('p', { class: 'drobny', text: 'Zgubiony telefon z kodami: administrator usuwa Twój czynnik MFA w panelu Supabase (Authentication → Users), a przy następnym logowaniu dodasz nowy. Samo konto też usuwa administrator.' }),
+    usunSerwer,
+  );
 }
 
 export async function render() {
+  renderKonto();
   const profil = (await db.meta('profil', {})) ?? {};
   /** @type {HTMLInputElement} */ ($('#profil-imie')).value = profil.display_name ?? '';
   /** @type {HTMLInputElement} */ ($('#profil-strefa')).value = profil.timezone ?? 'Europe/Warsaw';

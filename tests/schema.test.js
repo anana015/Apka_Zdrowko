@@ -1,8 +1,9 @@
 // Test schematu i RLS na PGlite (PostgreSQL w procesie Node), jak w Garaz_apka.
 // Uruchamia migracje na pustej bazie z atrapą schematu auth z Supabase.
+// Migracje dotyczące Storage (schemat storage istnieje tylko w Supabase) są pomijane.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 let PGlite = null;
 try { ({ PGlite } = await import('@electric-sql/pglite')); } catch { /* brak zależności: test pominięty */ }
@@ -10,26 +11,35 @@ const pomin = PGlite ? false : 'brak @electric-sql/pglite (npm install)';
 
 const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const KATALOG_MIGRACJI = new URL('../supabase/migrations/', import.meta.url);
+const MIGRACJE = readdirSync(KATALOG_MIGRACJI).filter((f) => /^\d+_.*\.sql$/.test(f) && !f.includes('storage')).sort();
 
+/** Atrapa elementów Supabase: auth.users, auth.jwt()/auth.uid() z claims jak w PostgREST, role Data API. */
 const ATRAPA_SUPABASE = `
   create schema auth;
   create table auth.users (id uuid primary key);
+  create function auth.jwt() returns jsonb language sql stable
+    as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
   create function auth.uid() returns uuid language sql stable
-    as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+    as $$ select nullif(auth.jwt() ->> 'sub', '')::uuid $$;
   create role anon nologin;
   create role authenticated nologin;
   grant usage on schema public, auth to anon, authenticated;
-  grant execute on function auth.uid() to anon, authenticated;
+  grant execute on function auth.uid(), auth.jwt() to anon, authenticated;
 `;
 
 async function przygotuj() {
   const db = new PGlite();
   await db.exec(ATRAPA_SUPABASE);
-  await db.exec(readFileSync(new URL('../supabase/migrations/0001_schemat.sql', import.meta.url), 'utf8'));
+  for (const plik of MIGRACJE) await db.exec(readFileSync(new URL(plik, KATALOG_MIGRACJI), 'utf8'));
   await db.exec(`insert into auth.users values ('${A}'), ('${B}')`);
-  /** Wykonuje zapytanie jako zalogowany użytkownik (rola authenticated + JWT sub). */
-  const jako = async (uid, sql, params = []) => {
-    await db.exec(`set role ${uid ? 'authenticated' : 'anon'}; select set_config('request.jwt.claim.sub', '${uid ?? ''}', false);`);
+  /**
+   * Wykonuje zapytanie jako użytkownik: rola authenticated + JWT z sub i poziomem uwierzytelnienia.
+   * uid = null → rola anon. aal domyślnie 'aal2' (po weryfikacji kodu TOTP).
+   */
+  const jako = async (uid, sql, params = [], aal = 'aal2') => {
+    const claims = uid ? JSON.stringify({ sub: uid, role: 'authenticated', aal }) : '{}';
+    await db.exec(`set role ${uid ? 'authenticated' : 'anon'}; select set_config('request.jwt.claims', '${claims}', false);`);
     try { return await db.query(sql, params); } finally { await db.exec('reset role'); }
   };
   return { db, jako };
@@ -86,4 +96,41 @@ test('updated_at zmienia się przy aktualizacji', { skip: pomin }, async () => {
   await jako(A, `update daily_entries set mood = 4 where id = $1`, [r.id]);
   const po = (await db.query('select updated_at from daily_entries where id = $1', [r.id])).rows[0];
   assert.ok(new Date(po.updated_at) > new Date(r.updated_at));
+});
+
+test('MFA: samo hasło (aal1) nie daje dostępu nawet do własnych danych', { skip: pomin }, async () => {
+  const { jako } = await przygotuj();
+  await jako(A, `insert into daily_entries (entry_date, mood) values ('2026-11-20', 4)`);
+  assert.equal((await jako(A, 'select * from daily_entries', [], 'aal1')).rows.length, 0);
+  await assert.rejects(jako(A, `insert into daily_entries (entry_date) values ('2026-11-21')`, [], 'aal1'), /row-level security/);
+  assert.equal((await jako(A, 'select * from daily_entries', [], 'aal2')).rows.length, 1);
+});
+
+test('Każda tabela w public ma RLS i restrykcyjną politykę wymagającą MFA', { skip: pomin }, async () => {
+  const { db } = await przygotuj();
+  const tabele = (await db.query(`select c.relname, c.relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind = 'r'`)).rows;
+  assert.ok(tabele.length >= 7);
+  for (const t of tabele) {
+    assert.equal(t.relrowsecurity, true, `${t.relname}: RLS wyłączone`);
+    const mfa = (await db.query(`select 1 from pg_policies where schemaname = 'public' and tablename = $1
+      and permissive = 'RESTRICTIVE' and qual like '%aal2%'`, [t.relname])).rows;
+    assert.equal(mfa.length, 1, `${t.relname}: brak restrykcyjnej polityki MFA`);
+  }
+});
+
+test('Nowa tabela nie jest automatycznie dostępna dla ról Data API', { skip: pomin }, async () => {
+  const { db } = await przygotuj();
+  await db.exec('create table public.nowa_tabela (id int)');
+  const r = (await db.query(`select has_table_privilege('authenticated', 'public.nowa_tabela', 'select') as auth,
+    has_table_privilege('anon', 'public.nowa_tabela', 'select') as anon`)).rows[0];
+  assert.equal(r.auth, false);
+  assert.equal(r.anon, false);
+});
+
+test('Profil powstaje automatycznie po utworzeniu konta', { skip: pomin }, async () => {
+  const { db, jako } = await przygotuj();
+  assert.equal((await db.query('select count(*)::int as n from profiles')).rows[0].n, 2);
+  const p = (await jako(A, 'select id, timezone from profiles')).rows;
+  assert.deepEqual(p, [{ id: A, timezone: 'Europe/Warsaw' }]);
 });

@@ -189,3 +189,58 @@ export async function wyczyscWszystko() {
   });
   powiadom('*');
 }
+
+// ---------- Synchronizacja (używane przez js/synchronizacja.js) ----------
+
+/** Wpisy kolejki zmian czekających na wysłanie. @returns {Promise<{id: string, tabela: Tabela, rekord_id: string, operacja: 'upsert'|'delete', kiedy: string}[]>} */
+export async function kolejka() {
+  const db = await otworz();
+  return obietnica(db.transaction('outbox').objectStore('outbox').getAll());
+}
+
+/** @param {string} id */
+export async function usunZKolejki(id) {
+  await transakcja(['outbox'], 'readwrite', (tx) => { tx.objectStore('outbox').delete(id); });
+}
+
+export async function wyczyscKolejke() {
+  await transakcja(['outbox'], 'readwrite', (tx) => { tx.objectStore('outbox').clear(); });
+  powiadom('outbox');
+}
+
+/**
+ * Zapis rekordów pobranych z serwera — bez dopisywania do kolejki (to już są dane serwera).
+ * @param {Tabela} tabela @param {Record<string, any>[]} rekordy @param {string[]} [doUsuniecia]
+ */
+export async function zapiszZSerwera(tabela, rekordy, doUsuniecia = []) {
+  if (!rekordy.length && !doUsuniecia.length) return;
+  await transakcja([tabela], 'readwrite', (tx) => {
+    const s = tx.objectStore(tabela);
+    for (const id of doUsuniecia) s.delete(id);
+    for (const r of rekordy) {
+      const { user_id, ...bezUzytkownika } = r;
+      s.put(bezUzytkownika);
+    }
+  });
+  powiadom(tabela);
+}
+
+/**
+ * Po udanym wysłaniu: usuwa wpis z kolejki i zapisuje wersję z serwera — ale tylko jeśli w międzyczasie
+ * nikt nie zmienił rekordu ponownie (wtedy zostaje w kolejce i pójdzie w następnej synchronizacji).
+ * @param {Tabela} tabela @param {string} idKolejki @param {string} kiedy @param {Record<string, any>|null} rekord @param {string|null} [staryId]
+ */
+export async function zatwierdzWyslanie(tabela, idKolejki, kiedy, rekord, staryId = null) {
+  await transakcja([tabela, 'outbox'], 'readwrite', (tx) => {
+    const req = tx.objectStore('outbox').get(idKolejki);
+    req.onsuccess = () => {
+      if (req.result && req.result.kiedy !== kiedy) return;
+      tx.objectStore('outbox').delete(idKolejki);
+      if (staryId) tx.objectStore(tabela).delete(staryId);
+      if (rekord) {
+        const { user_id, ...r } = rekord;
+        tx.objectStore(tabela).put(r);
+      }
+    };
+  });
+}
