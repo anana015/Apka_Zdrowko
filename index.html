@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="pl" data-motyw="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- CSP w meta działa lokalnie i jako zabezpieczenie awaryjne; docelowo nagłówek HTTP z pliku _headers (frame-ancestors działa tylko w nagłówku). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#F4F5FA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14162A" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Prywatny dziennik snu, nastroju, dolegliwości, leków i wyników badań.">
+  <title>Dziennik zdrowia</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preload" href="fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="pomin" href="#tresc">Przejdź do treści</a>
+
+  <!-- Ikony (sprite SVG, bez zewnętrznych zasobów) -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-dzis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+    <symbol id="i-historia" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-wykresy" viewBox="0 0 24 24"><path d="M3.5 3.5v17h17"/><path d="m7 15 4-4.5 3 3 5.5-6.5"/></symbol>
+    <symbol id="i-leki" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="2.5" y="8.25" width="19" height="7.5" rx="3.75"/><path d="M12 8.25v7.5"/></g></symbol>
+    <symbol id="i-badania" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6.2L4.8 18.6A1.6 1.6 0 0 0 6.2 21h11.6a1.6 1.6 0 0 0 1.4-2.4L14 9.2V3"/><path d="M7.2 15h9.6"/></symbol>
+    <symbol id="i-profil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-wstecz" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-dalej" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-bol" viewBox="0 0 24 24"><path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12z"/></symbol>
+    <symbol id="i-alarm" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+    <symbol id="i-tel" viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.4 4.2-2 1.5a12 12 0 0 0 6.2 6.2l1.5-2 4.2 1.4v2.6a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-druk" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></symbol>
+    <symbol id="i-pobierz" viewBox="0 0 24 24"><path d="M12 3.5v11M7 10l5 5 5-5M4.5 20.5h15"/></symbol>
+  </svg>
+
+  <header class="gora">
+    <div class="gora__wnetrze">
+      <p class="gora__nazwa">Dziennik zdrowia</p>
+      <details class="status" id="status-sync">
+        <summary><span class="status__kropka" aria-hidden="true"></span><span id="status-tekst">Zapisano lokalnie</span></summary>
+        <div class="status__opis" id="status-opis"></div>
+      </details>
+      <a class="przycisk-ikona" href="#ustawienia" id="link-ustawienia" aria-label="Ustawienia i profil">
+        <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-profil"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div id="baner-flag" class="baner-flag" hidden></div>
+
+  <main id="tresc" tabindex="-1">
+
+    <!-- ===== DZIŚ ===== -->
+    <section class="ekran" id="ekran-dzis" data-ekran="dzis" aria-labelledby="dzis-tytul" hidden>
+      <div class="naglowek-dnia">
+        <button type="button" class="przycisk-ikona" id="dzis-poprzedni" aria-label="Poprzedni dzień">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-wstecz"/></svg>
+        </button>
+        <div class="naglowek-dnia__tekst">
+          <h1 id="dzis-tytul" tabindex="-1">Dziś</h1>
+          <p class="naglowek-dnia__data" id="dzis-data"></p>
+        </div>
+        <button type="button" class="przycisk-ikona" id="dzis-nastepny" aria-label="Następny dzień">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-dalej"/></svg>
+        </button>
+      </div>
+
+      <div id="dzis-bol" class="strefa-bolu"></div>
+
+      <form id="form-wpis" class="wpis" novalidate>
+        <p class="podpowiedz" id="wpis-zrodlo" hidden></p>
+
+        <fieldset class="grupa">
+          <legend class="grupa__tytul">Sen</legend>
+          <fieldset class="przelacznik">
+            <legend class="sr-only">Jak wpisać sen</legend>
+            <input type="radio" name="tryb_snu" id="tryb-czasy" value="czasy" checked>
+            <label for="tryb-czasy">Zaśnięcie i pobudka</label>
+            <input type="radio" name="tryb_snu" id="tryb-liczba" value="liczba">
+            <label for="tryb-liczba">Liczba godzin</label>
+          </fieldset>
+
+          <div class="pola-snu" data-tryb="czasy">
+            <div class="pole">
+              <label for="wpis-zasniecie">Zaśnięcie</label>
+              <input type="time" id="wpis-zasniecie" name="zasniecie">
+            </div>
+            <div class="pole">
+              <label for="wpis-pobudka">Pobudka</label>
+              <input type="time" id="wpis-pobudka" name="pobudka">
+            </div>
+            <output class="wynik-snu" id="wpis-sen-wynik" for="wpis-zasniecie wpis-pobudka" aria-live="polite"></output>
+          </div>
+          <div class="pola-snu" data-tryb="liczba" hidden>
+            <div class="pole">
+              <label for="wpis-godziny">Godziny snu</label>
+              <input type="number" id="wpis-godziny" name="godziny" min="0" max="24" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+
+          <fieldset class="skala" data-skala="sleep_quality" data-min="Bardzo słaba" data-max="Bardzo dobra">
+            <legend>Jakość snu</legend>
+          </fieldset>
+
+          <div class="licznik">
+            <label for="wpis-wybudzenia">Wybudzenia w nocy <span class="opcjonalne">(opcjonalnie)</span></label>
+            <div class="licznik__kontrolki">
+              <button type="button" class="przycisk-ikona" data-licznik="-1" aria-label="Mniej wybudzeń">
+                <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-minus"/></svg>
+              </button>
+              <input type="number" id="wpis-wybudzenia" name="wybudzenia" min="0" max="30" inputmode="numeric" placeholder="–">
+              <button type="button" class="przycisk-ikona" data-licznik="1" aria-label="Więcej wybudzeń">
+                <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>
+              </button>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="grupa">
+          <legend class="grupa__tytul">Samopoczucie</legend>
+          <fieldset class="skala skala--nastroj" data-skala="mood" data-min="Bardzo zły" data-max="Bardzo dobry">
+            <legend>Nastrój</legend>
+          </fieldset>
+          <fieldset class="skala" data-skala="energy" data-min="Bardzo mało" data-max="Dużo">
+            <legend>Energia</legend>
+          </fieldset>
+          <fieldset class="skala" data-skala="stress" data-min="Niski" data-max="Bardzo wysoki">
+            <legend>Stres</legend>
+          </fieldset>
+        </fieldset>
+
+        <fieldset class="grupa">
+          <legend class="grupa__tytul">Znaczniki dnia</legend>
+          <div class="chipy" id="wpis-tagi"></div>
+          <div class="dodaj-wiersz">
+            <label for="wpis-nowy-tag" class="sr-only">Nowy znacznik dnia</label>
+            <input type="text" id="wpis-nowy-tag" maxlength="40" placeholder="Własny znacznik, np. upał" enterkeyhint="done">
+            <button type="button" class="btn btn-drugorzedny" id="wpis-dodaj-tag">Dodaj</button>
+          </div>
+        </fieldset>
+
+        <div class="grupa">
+          <label class="grupa__tytul" for="wpis-notatka">Notatka</label>
+          <textarea id="wpis-notatka" name="notatka" rows="3" maxlength="2000" placeholder="Co warto zapamiętać z tego dnia?"></textarea>
+        </div>
+
+        <div class="pasek-zapisu">
+          <p class="pasek-zapisu__stan" id="wpis-stan" role="status"></p>
+          <button type="submit" class="btn btn-glowny">Zapisz wpis</button>
+        </div>
+      </form>
+
+      <section class="sekcja" aria-labelledby="dzis-leki-tytul">
+        <div class="sekcja__naglowek">
+          <h2 id="dzis-leki-tytul">Leki i suplementy</h2>
+          <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dorazny">Dodaj doraźny</button>
+        </div>
+        <div id="dzis-leki"></div>
+      </section>
+
+      <section class="sekcja" aria-labelledby="dzis-epizody-tytul">
+        <div class="sekcja__naglowek">
+          <h2 id="dzis-epizody-tytul">Dolegliwości</h2>
+          <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dodaj-epizod">Dodaj dolegliwość</button>
+        </div>
+        <ul class="lista" id="dzis-epizody"></ul>
+      </section>
+    </section>
+
+    <!-- ===== HISTORIA ===== -->
+    <section class="ekran" id="ekran-historia" data-ekran="historia" aria-labelledby="historia-tytul" hidden>
+      <h1 id="historia-tytul" tabindex="-1">Historia</h1>
+      <div class="kalendarz-naglowek">
+        <button type="button" class="przycisk-ikona" id="kal-poprzedni" aria-label="Poprzedni miesiąc">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-wstecz"/></svg>
+        </button>
+        <h2 id="kal-miesiac" aria-live="polite"></h2>
+        <button type="button" class="przycisk-ikona" id="kal-nastepny" aria-label="Następny miesiąc">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-dalej"/></svg>
+        </button>
+      </div>
+      <div class="kalendarz" id="kalendarz" role="group" aria-labelledby="kal-miesiac"></div>
+      <div class="legenda" id="kal-legenda" aria-label="Legenda kolorów nastroju"></div>
+      <section class="sekcja" id="kal-dzien" aria-live="polite"></section>
+    </section>
+
+    <!-- ===== WYKRESY ===== -->
+    <section class="ekran" id="ekran-wykresy" data-ekran="wykresy" aria-labelledby="wykresy-tytul" hidden>
+      <h1 id="wykresy-tytul" tabindex="-1">Wykresy</h1>
+      <fieldset class="przelacznik przelacznik--3">
+        <legend class="sr-only">Zakres dni</legend>
+        <input type="radio" name="zakres" id="zakres-7" value="7">
+        <label for="zakres-7">7 dni</label>
+        <input type="radio" name="zakres" id="zakres-30" value="30" checked>
+        <label for="zakres-30">30 dni</label>
+        <input type="radio" name="zakres" id="zakres-90" value="90">
+        <label for="zakres-90">90 dni</label>
+      </fieldset>
+
+      <section class="sekcja" aria-labelledby="podsumowanie-tytul">
+        <h2 id="podsumowanie-tytul">Podsumowanie</h2>
+        <dl class="liczby" id="podsumowanie"></dl>
+      </section>
+
+      <section class="sekcja" aria-labelledby="wykres-sen-tytul">
+        <h2 id="wykres-sen-tytul">Sen</h2>
+        <div class="wykres" id="wykres-sen"></div>
+      </section>
+      <section class="sekcja" aria-labelledby="wykres-nastroj-tytul">
+        <h2 id="wykres-nastroj-tytul">Nastrój i energia</h2>
+        <div class="wykres" id="wykres-nastroj"></div>
+      </section>
+      <section class="sekcja" aria-labelledby="wykres-bol-tytul">
+        <h2 id="wykres-bol-tytul">Epizody bólu</h2>
+        <div class="wykres" id="wykres-bol"></div>
+      </section>
+
+      <section class="sekcja" aria-labelledby="zaleznosci-tytul">
+        <h2 id="zaleznosci-tytul">Zależności</h2>
+        <p class="drobny">Obliczane ze wszystkich Twoich wpisów, niezależnie od wybranego zakresu.</p>
+        <div id="zaleznosci" aria-live="polite"></div>
+      </section>
+
+      <section class="sekcja" aria-labelledby="raport-tytul">
+        <h2 id="raport-tytul">Raport dla lekarza</h2>
+        <p class="drobny">Tabela i wykresy z wybranego okresu, bez interpretacji. Wydrukuj albo zapisz jako PDF w oknie drukowania.</p>
+        <div class="pola-2">
+          <div class="pole"><label for="raport-od">Od</label><input type="date" id="raport-od"></div>
+          <div class="pole"><label for="raport-do">Do</label><input type="date" id="raport-do"></div>
+        </div>
+        <button type="button" class="btn btn-drugorzedny" id="raport-drukuj">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-druk"/></svg>
+          Drukuj raport
+        </button>
+      </section>
+
+      <p class="zastrzezenie-stopka" data-zastrzezenie></p>
+    </section>
+
+    <!-- ===== LEKI ===== -->
+    <section class="ekran" id="ekran-leki" data-ekran="leki" aria-labelledby="leki-tytul" hidden>
+      <div class="sekcja__naglowek">
+        <h1 id="leki-tytul" tabindex="-1">Leki i suplementy</h1>
+        <button type="button" class="btn btn-glowny btn-maly" id="leki-dodaj">Dodaj</button>
+      </div>
+      <p class="drobny">Aplikacja nie zawiera bazy leków ani informacji o interakcjach. Dawki wpisuj zgodnie z zaleceniem lekarza lub ulotką.</p>
+      <ul class="lista" id="leki-lista"></ul>
+
+      <section class="sekcja" aria-labelledby="rejestr-tytul">
+        <div class="sekcja__naglowek">
+          <h2 id="rejestr-tytul">Rejestr przyjęć (30 dni)</h2>
+          <button type="button" class="btn btn-drugorzedny btn-maly" id="leki-dorazny">Dodaj doraźny</button>
+        </div>
+        <div id="leki-rejestr"></div>
+      </section>
+    </section>
+
+    <!-- ===== BADANIA ===== -->
+    <section class="ekran" id="ekran-badania" data-ekran="badania" aria-labelledby="badania-tytul" hidden>
+      <div class="sekcja__naglowek">
+        <h1 id="badania-tytul" tabindex="-1">Badania</h1>
+        <button type="button" class="btn btn-glowny btn-maly" id="badania-dodaj">Dodaj wynik</button>
+      </div>
+      <p class="drobny">Zakresy referencyjne przepisuj z wyniku swojego laboratorium. Oznaczenie „poza zakresem laboratorium” to tylko porównanie liczb, nie ocena wyniku.</p>
+      <div class="pole">
+        <label for="badania-filtr">Pokaż badanie</label>
+        <select id="badania-filtr"></select>
+      </div>
+      <div id="badania-szczegoly"></div>
+      <ul class="lista" id="badania-lista"></ul>
+
+      <section class="sekcja" aria-labelledby="dokumenty-tytul">
+        <h2 id="dokumenty-tytul">Dokumenty</h2>
+        <p class="pusty">Załączniki (PDF, zdjęcia wyników, wypisy) zapiszesz po podłączeniu prywatnego magazynu plików. W tym szkicu dane są tylko na urządzeniu.</p>
+      </section>
+    </section>
+
+    <!-- ===== USTAWIENIA ===== -->
+    <section class="ekran" id="ekran-ustawienia" data-ekran="ustawienia" aria-labelledby="ustawienia-tytul" hidden>
+      <h1 id="ustawienia-tytul" tabindex="-1">Ustawienia</h1>
+
+      <form class="sekcja" id="form-profil" aria-labelledby="profil-tytul">
+        <h2 id="profil-tytul">Profil</h2>
+        <div class="pole">
+          <label for="profil-imie">Imię lub pseudonim</label>
+          <input type="text" id="profil-imie" maxlength="60" autocomplete="nickname">
+        </div>
+        <div class="pole">
+          <label for="profil-strefa">Strefa czasowa</label>
+          <input type="text" id="profil-strefa" list="lista-stref" autocomplete="off">
+          <datalist id="lista-stref"></datalist>
+          <p class="drobny" id="profil-strefa-uwaga"></p>
+        </div>
+        <button type="submit" class="btn btn-drugorzedny">Zapisz profil</button>
+      </form>
+
+      <section class="sekcja" aria-labelledby="wyglad-tytul">
+        <h2 id="wyglad-tytul">Wygląd</h2>
+        <fieldset class="przelacznik przelacznik--3">
+          <legend class="sr-only">Motyw</legend>
+          <input type="radio" name="motyw" id="motyw-system" value="system" checked>
+          <label for="motyw-system">Systemowy</label>
+          <input type="radio" name="motyw" id="motyw-jasny" value="jasny">
+          <label for="motyw-jasny">Jasny</label>
+          <input type="radio" name="motyw" id="motyw-ciemny" value="ciemny">
+          <label for="motyw-ciemny">Ciemny</label>
+        </fieldset>
+      </section>
+
+      <section class="sekcja" aria-labelledby="tagi-tytul">
+        <h2 id="tagi-tytul">Znaczniki dnia</h2>
+        <p class="drobny">Usunięcie znacznika z listy nie zmienia zapisanych wpisów.</p>
+        <ul class="lista lista--zwarta" id="ustawienia-tagi"></ul>
+      </section>
+
+      <section class="sekcja" aria-labelledby="przypomnienia-tytul">
+        <h2 id="przypomnienia-tytul">Przypomnienia</h2>
+        <p class="pusty">Wieczorne przypomnienie o wpisie, o lekach i o kontroli badań pojawi się w etapie 5. Na iPhonie powiadomienia wymagają dodania aplikacji do ekranu głównego.</p>
+      </section>
+
+      <section class="sekcja" aria-labelledby="konto-tytul">
+        <h2 id="konto-tytul">Konto i bezpieczeństwo</h2>
+        <p class="pusty">Logowanie, weryfikacja dwuetapowa (TOTP) i synchronizacja między urządzeniami pojawią się po podłączeniu serwera w UE. Do tego czasu dane są zapisane tylko w tej przeglądarce i nie są szyfrowane, więc chroni je blokada ekranu urządzenia.</p>
+      </section>
+
+      <section class="sekcja" aria-labelledby="dane-tytul">
+        <h2 id="dane-tytul">Twoje dane</h2>
+        <div class="przyciski">
+          <button type="button" class="btn btn-drugorzedny" id="eksport-json">
+            <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-pobierz"/></svg>
+            Pobierz kopię (JSON)
+          </button>
+          <button type="button" class="btn btn-drugorzedny" id="eksport-csv">
+            <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-pobierz"/></svg>
+            Pobierz tabele (CSV)
+          </button>
+        </div>
+        <div class="pole">
+          <label for="import-plik">Wczytaj kopię z pliku JSON</label>
+          <input type="file" id="import-plik" accept="application/json,.json">
+          <p class="drobny">Wczytanie kopii zastępuje wszystkie dane na tym urządzeniu.</p>
+        </div>
+        <div class="przyciski">
+          <button type="button" class="btn btn-drugorzedny" id="dane-demo">Wczytaj dane przykładowe</button>
+          <button type="button" class="btn btn-niebezpieczny" id="dane-usun">Usuń wszystkie dane</button>
+        </div>
+        <p class="drobny">Dane przykładowe są wymyślone (90 dni) i zastępują Twoje dane. Służą do obejrzenia wykresów i zależności.</p>
+        <p class="pasek-zapisu__stan" id="dane-stan" role="status"></p>
+      </section>
+
+      <section class="sekcja" aria-labelledby="zastrzezenie-tytul">
+        <h2 id="zastrzezenie-tytul">Zastrzeżenie medyczne</h2>
+        <p data-zastrzezenie></p>
+        <p class="drobny" id="zastrzezenie-data"></p>
+      </section>
+
+      <section class="sekcja" aria-labelledby="prywatnosc-tytul">
+        <h2 id="prywatnosc-tytul">Prywatność</h2>
+        <ul class="punkty">
+          <li>Przechowujemy tylko to, co wpiszesz: sen, samopoczucie, dolegliwości, leki i wyniki badań.</li>
+          <li>W tej wersji dane są wyłącznie w pamięci tej przeglądarki (IndexedDB). Nic nie jest wysyłane.</li>
+          <li>Brak analityki i zewnętrznych skryptów.</li>
+          <li>Kopię pobierzesz przyciskiem „Pobierz kopię”, a wszystko usuniesz przyciskiem „Usuń wszystkie dane”.</li>
+        </ul>
+      </section>
+
+      <p class="drobny" id="wersja"></p>
+    </section>
+  </main>
+
+  <nav class="nawigacja" aria-label="Główna">
+    <a href="#dzis" data-cel="dzis"><svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-dzis"/></svg><span>Dziś</span></a>
+    <a href="#historia" data-cel="historia"><svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-historia"/></svg><span>Historia</span></a>
+    <a href="#wykresy" data-cel="wykresy"><svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-wykresy"/></svg><span>Wykresy</span></a>
+    <a href="#leki" data-cel="leki"><svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-leki"/></svg><span>Leki</span></a>
+    <a href="#badania" data-cel="badania"><svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-badania"/></svg><span>Badania</span></a>
+  </nav>
+
+  <div class="toasty" id="toasty" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- ===== DIALOG: zastrzeżenie przy pierwszym uruchomieniu ===== -->
+  <dialog id="dialog-zastrzezenie" class="dialog" aria-labelledby="dz-tytul" aria-describedby="dz-tresc">
+    <form id="form-zastrzezenie" class="dialog__tresc">
+      <h2 id="dz-tytul">Zanim zaczniesz</h2>
+      <p id="dz-tresc" data-zastrzezenie></p>
+      <p>Twoje wpisy zostają na tym urządzeniu. Nikt poza Tobą ich nie widzi.</p>
+      <label class="zgoda">
+        <input type="checkbox" id="dz-zgoda" required>
+        <span>Rozumiem, że aplikacja służy do notatek i nie zastępuje lekarza.</span>
+      </label>
+      <div class="dialog__stopka">
+        <button type="submit" class="btn btn-glowny" id="dz-akceptuj" disabled>Zaczynam</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== DIALOG: epizod dolegliwości ===== -->
+  <dialog id="dialog-epizod" class="dialog" aria-labelledby="ep-tytul">
+    <form id="form-epizod" class="dialog__tresc" novalidate>
+      <div class="dialog__naglowek">
+        <h2 id="ep-tytul">Dolegliwość</h2>
+        <button type="button" class="przycisk-ikona" data-zamknij aria-label="Zamknij">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
+        </button>
+      </div>
+
+      <fieldset class="pole">
+        <legend>Rodzaj</legend>
+        <div class="wybor-pionowy">
+          <label class="opcja"><input type="radio" name="kind" value="headache" checked><span>Ból głowy</span></label>
+          <label class="opcja"><input type="radio" name="kind" value="migraine"><span>Migrena <span class="opcjonalne">(Twoja etykieta, nie rozpoznanie)</span></span></label>
+          <label class="opcja"><input type="radio" name="kind" value="other"><span>Inna dolegliwość</span></label>
+        </div>
+      </fieldset>
+      <div class="pole" id="ep-nazwa-pole" hidden>
+        <label for="ep-nazwa">Nazwa dolegliwości</label>
+        <input type="text" id="ep-nazwa" maxlength="60" placeholder="np. ból brzucha">
+      </div>
+
+      <div class="pola-2 pola-2--czas">
+        <div class="pole">
+          <label for="ep-poczatek">Początek</label>
+          <input type="datetime-local" id="ep-poczatek" required>
+        </div>
+        <div class="pole">
+          <label for="ep-koniec">Koniec</label>
+          <input type="datetime-local" id="ep-koniec">
+          <label class="opcja opcja--mala"><input type="checkbox" id="ep-trwa"><span>Trwa nadal</span></label>
+        </div>
+      </div>
+
+      <div class="pole">
+        <label for="ep-nasilenie">Nasilenie (0–10)</label>
+        <div class="suwak">
+          <input type="range" id="ep-nasilenie" min="0" max="10" step="1" value="5" aria-describedby="ep-nasilenie-wartosc">
+          <output id="ep-nasilenie-wartosc" for="ep-nasilenie" class="suwak__wartosc">–</output>
+        </div>
+      </div>
+
+      <div class="pole">
+        <label for="ep-lokalizacja">Gdzie boli</label>
+        <input type="text" id="ep-lokalizacja" list="lista-lokalizacji" maxlength="60">
+        <datalist id="lista-lokalizacji">
+          <option value="Czoło"></option><option value="Skronie"></option><option value="Potylica"></option>
+          <option value="Jedna strona głowy"></option><option value="Cała głowa"></option><option value="Za okiem"></option>
+        </datalist>
+      </div>
+
+      <fieldset class="pole">
+        <legend>Objawy towarzyszące</legend>
+        <div class="chipy" id="ep-objawy"></div>
+      </fieldset>
+
+      <fieldset class="pole pole--alarm">
+        <legend>Objawy wymagające pilnej pomocy</legend>
+        <p class="drobny">Zaznacz, jeśli coś z tego występuje. Aplikacja pokaże wtedy numery pomocy.</p>
+        <div class="wybor-pionowy" id="ep-alarmowe"></div>
+      </fieldset>
+
+      <fieldset class="pole">
+        <legend>Możliwe czynniki</legend>
+        <div class="chipy" id="ep-czynniki"></div>
+        <div class="dodaj-wiersz">
+          <label for="ep-nowy-czynnik" class="sr-only">Nowy czynnik</label>
+          <input type="text" id="ep-nowy-czynnik" maxlength="40" placeholder="Własny czynnik">
+          <button type="button" class="btn btn-drugorzedny" id="ep-dodaj-czynnik">Dodaj</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="pole">
+        <legend>Przyjęte leki</legend>
+        <ul class="lista lista--zwarta" id="ep-leki"></ul>
+        <div class="dodaj-wiersz dodaj-wiersz--lek">
+          <label for="ep-lek-wybor" class="sr-only">Lek</label>
+          <select id="ep-lek-wybor"></select>
+          <label for="ep-lek-czas" class="sr-only">Godzina przyjęcia</label>
+          <input type="datetime-local" id="ep-lek-czas">
+          <button type="button" class="btn btn-drugorzedny" id="ep-lek-dodaj">Dodaj</button>
+        </div>
+      </fieldset>
+
+      <fieldset class="pole">
+        <legend>Ulga po 2 godzinach</legend>
+        <div class="przelacznik przelacznik--4">
+          <input type="radio" name="relief" id="ulga-brak-oceny" value="" checked><label for="ulga-brak-oceny">Nie oceniam</label>
+          <input type="radio" name="relief" id="ulga-none" value="none"><label for="ulga-none">Brak</label>
+          <input type="radio" name="relief" id="ulga-partial" value="partial"><label for="ulga-partial">Częściowa</label>
+          <input type="radio" name="relief" id="ulga-full" value="full"><label for="ulga-full">Pełna</label>
+        </div>
+      </fieldset>
+
+      <div class="pole">
+        <label for="ep-notatka">Notatka</label>
+        <textarea id="ep-notatka" rows="2" maxlength="2000"></textarea>
+      </div>
+
+      <p class="blad" id="ep-blad" role="alert" hidden></p>
+      <div class="dialog__stopka">
+        <button type="button" class="btn btn-niebezpieczny" id="ep-usun" hidden>Usuń</button>
+        <button type="button" class="btn btn-drugorzedny" data-zamknij>Anuluj</button>
+        <button type="submit" class="btn btn-glowny">Zapisz</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== DIALOG: lek / suplement ===== -->
+  <dialog id="dialog-lek" class="dialog" aria-labelledby="lek-tytul">
+    <form id="form-lek" class="dialog__tresc" novalidate>
+      <div class="dialog__naglowek">
+        <h2 id="lek-tytul">Lek lub suplement</h2>
+        <button type="button" class="przycisk-ikona" data-zamknij aria-label="Zamknij">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
+        </button>
+      </div>
+      <div class="pole">
+        <label for="lek-nazwa">Nazwa</label>
+        <input type="text" id="lek-nazwa" maxlength="80" required autocomplete="off">
+      </div>
+      <fieldset class="przelacznik">
+        <legend class="sr-only">Rodzaj</legend>
+        <input type="radio" name="lek_kind" id="lek-kind-med" value="medication" checked><label for="lek-kind-med">Lek</label>
+        <input type="radio" name="lek_kind" id="lek-kind-sup" value="supplement"><label for="lek-kind-sup">Suplement</label>
+      </fieldset>
+      <div class="pole">
+        <label for="lek-dawka">Dawka</label>
+        <input type="text" id="lek-dawka" maxlength="80" placeholder="np. 1 tabletka 400 mg">
+      </div>
+      <fieldset class="pole">
+        <legend>Harmonogram</legend>
+        <div class="przelacznik">
+          <input type="radio" name="lek_harmonogram" id="lek-codziennie" value="daily" checked><label for="lek-codziennie">Codziennie</label>
+          <input type="radio" name="lek_harmonogram" id="lek-doraznie" value="as_needed"><label for="lek-doraznie">Doraźnie</label>
+        </div>
+        <div id="lek-godziny-pole">
+          <ul class="lista lista--zwarta" id="lek-godziny"></ul>
+          <button type="button" class="btn btn-drugorzedny btn-maly" id="lek-dodaj-godzine">Dodaj godzinę</button>
+        </div>
+      </fieldset>
+      <div class="pola-2">
+        <div class="pole"><label for="lek-od">Od</label><input type="date" id="lek-od"></div>
+        <div class="pole"><label for="lek-do">Do <span class="opcjonalne">(opcjonalnie)</span></label><input type="date" id="lek-do"></div>
+      </div>
+      <div class="pole">
+        <label for="lek-notatka">Notatka</label>
+        <textarea id="lek-notatka" rows="2" maxlength="1000"></textarea>
+      </div>
+      <label class="opcja"><input type="checkbox" id="lek-aktywny" checked><span>Przyjmuję obecnie</span></label>
+      <p class="blad" id="lek-blad" role="alert" hidden></p>
+      <div class="dialog__stopka">
+        <button type="button" class="btn btn-niebezpieczny" id="lek-usun" hidden>Usuń</button>
+        <button type="button" class="btn btn-drugorzedny" data-zamknij>Anuluj</button>
+        <button type="submit" class="btn btn-glowny">Zapisz</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== DIALOG: przyjęcie doraźne ===== -->
+  <dialog id="dialog-przyjecie" class="dialog" aria-labelledby="prz-tytul">
+    <form id="form-przyjecie" class="dialog__tresc" novalidate>
+      <div class="dialog__naglowek">
+        <h2 id="prz-tytul">Przyjęcie doraźne</h2>
+        <button type="button" class="przycisk-ikona" data-zamknij aria-label="Zamknij">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
+        </button>
+      </div>
+      <div class="pole">
+        <label for="prz-lek">Lek lub suplement</label>
+        <select id="prz-lek" required></select>
+      </div>
+      <div class="pole">
+        <label for="prz-czas">Kiedy</label>
+        <input type="datetime-local" id="prz-czas" required>
+      </div>
+      <div class="pole">
+        <label for="prz-dawka">Dawka <span class="opcjonalne">(jeśli inna niż zwykle)</span></label>
+        <input type="text" id="prz-dawka" maxlength="80">
+      </div>
+      <div class="pole">
+        <label for="prz-powod">Powód</label>
+        <input type="text" id="prz-powod" maxlength="120" placeholder="np. ból głowy">
+      </div>
+      <div class="pole">
+        <label for="prz-epizod">Powiąż z dolegliwością <span class="opcjonalne">(opcjonalnie)</span></label>
+        <select id="prz-epizod"></select>
+      </div>
+      <p class="blad" id="prz-blad" role="alert" hidden></p>
+      <div class="dialog__stopka">
+        <button type="button" class="btn btn-drugorzedny" data-zamknij>Anuluj</button>
+        <button type="submit" class="btn btn-glowny">Zapisz</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== DIALOG: wynik badania ===== -->
+  <dialog id="dialog-badanie" class="dialog dialog--szeroki" aria-labelledby="bad-tytul">
+    <form id="form-badanie" class="dialog__tresc" novalidate>
+      <div class="dialog__naglowek">
+        <h2 id="bad-tytul">Wynik badania</h2>
+        <button type="button" class="przycisk-ikona" data-zamknij aria-label="Zamknij">
+          <svg class="ikona" aria-hidden="true" focusable="false"><use href="#i-x"/></svg>
+        </button>
+      </div>
+      <div class="pole" id="bad-szablon-pole">
+        <label for="bad-szablon">Zestaw</label>
+        <select id="bad-szablon"></select>
+        <p class="drobny">Zestaw podpowiada nazwy i typowe jednostki. Nie zawiera norm.</p>
+      </div>
+      <div class="pola-2">
+        <div class="pole"><label for="bad-data">Data pobrania</label><input type="date" id="bad-data" required></div>
+        <div class="pole"><label for="bad-lab">Laboratorium</label><input type="text" id="bad-lab" maxlength="80"></div>
+      </div>
+      <div id="bad-wiersze" class="wiersze-badan"></div>
+      <button type="button" class="btn btn-drugorzedny btn-maly" id="bad-dodaj-wiersz">Dodaj parametr</button>
+      <div id="bad-podglad" class="podglad" hidden></div>
+      <p class="blad" id="bad-blad" role="alert" hidden></p>
+      <div class="dialog__stopka">
+        <button type="button" class="btn btn-niebezpieczny" id="bad-usun" hidden>Usuń</button>
+        <button type="button" class="btn btn-drugorzedny" data-zamknij>Anuluj</button>
+        <button type="submit" class="btn btn-glowny" id="bad-zapisz">Sprawdź</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Raport do druku (wypełniany na żądanie) -->
+  <div id="raport" class="raport" hidden></div>
+</body>
+</html>

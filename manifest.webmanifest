@@ -1,0 +1,19 @@
+{
+  "name": "Dziennik zdrowia",
+  "short_name": "Dziennik",
+  "description": "Prywatny dziennik snu, nastroju, dolegliwości, leków i wyników badań.",
+  "lang": "pl",
+  "dir": "ltr",
+  "start_url": "./#dzis",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F5FA",
+  "theme_color": "#454AA0",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -1,0 +1,35 @@
+// Plik generowany przez scripts/generuj-precache.mjs — nie edytuj ręcznie.
+self.PRECACHE = {
+  "wersja": "fb57a60af83e",
+  "pliki": [
+    "./",
+    "./css/style.css",
+    "./fonts/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2",
+    "./fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2",
+    "./icons/apple-touch-icon.png",
+    "./icons/icon-192.png",
+    "./icons/icon-512.png",
+    "./icons/icon-maskable-512.png",
+    "./icons/icon.svg",
+    "./index.html",
+    "./js/app.js",
+    "./js/badania.js",
+    "./js/db.js",
+    "./js/demo.js",
+    "./js/dolegliwosci.js",
+    "./js/eksport.js",
+    "./js/flagi.js",
+    "./js/historia.js",
+    "./js/korelacje.js",
+    "./js/leki.js",
+    "./js/obliczenia.js",
+    "./js/offline.js",
+    "./js/tagi.js",
+    "./js/teksty.js",
+    "./js/ustawienia.js",
+    "./js/utils.js",
+    "./js/wpis.js",
+    "./js/wykresy.js",
+    "./manifest.webmanifest"
+  ]
+};
