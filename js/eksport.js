@@ -10,7 +10,7 @@ export const WERSJA_FORMATU = 1;
 /** Kolumny jak w schemacie PostgreSQL (sekcja 7), bez user_id. */
 export const KOLUMNY = Object.freeze({
   daily_entries: ['id', 'entry_date', 'sleep_start', 'sleep_end', 'sleep_hours', 'sleep_quality', 'awakenings', 'mood', 'energy', 'stress', 'tags', 'note', 'created_at', 'updated_at'],
-  symptom_episodes: ['id', 'kind', 'custom_name', 'started_at', 'ended_at', 'intensity', 'location', 'features', 'triggers', 'relief', 'note', 'created_at', 'updated_at'],
+  symptom_episodes: ['id', 'kind', 'custom_name', 'started_at', 'ended_at', 'intensity', 'location', 'temperature', 'features', 'triggers', 'relief', 'note', 'created_at', 'updated_at'],
   medications: ['id', 'name', 'kind', 'dose_text', 'schedule', 'start_date', 'end_date', 'active', 'note', 'created_at', 'updated_at'],
   medication_intakes: ['id', 'medication_id', 'taken_at', 'scheduled_time', 'dose_text', 'reason', 'episode_id', 'created_at', 'updated_at'],
   lab_results: ['id', 'taken_on', 'test_name', 'value', 'unit', 'ref_low', 'ref_high', 'lab_name', 'document_id', 'note', 'created_at', 'updated_at'],

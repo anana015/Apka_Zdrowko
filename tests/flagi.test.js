@@ -32,3 +32,12 @@ test('baner tylko dla zdarzeń z ostatnich 48 h', () => {
 test('lista flag jest sprawdzona ze źródłami', () => {
   assert.equal(ZWERYFIKOWANO, true);
 });
+
+test('infekcja: gorączka ponad 3 dni i brak poprawy po tygodniu', () => {
+  const teraz = new Date(2026, 10, 23, 12);
+  const inf = (dni, features, temperature = null) => ({ kind: 'infection', started_at: new Date(teraz.getTime() - dni * 86400000).toISOString(), ended_at: null, features, temperature });
+  const ids = (e) => aktywneFlagi({ wpisy: [], epizody: [e], teraz }).flagi.map((f) => f.id);
+  assert.deepEqual(ids(inf(2, ['goraczka'])), []);
+  assert.deepEqual(ids(inf(4, [], 38.5)), ['inf_goraczka_3dni']);
+  assert.deepEqual(ids(inf(8, ['katar'])), ['inf_7dni']);
+});

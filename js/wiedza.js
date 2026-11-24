@@ -12,11 +12,11 @@ import { LEKI, RPL_URL, lek } from './apteczka.js';
 export const tytul = 'Wiedza';
 
 /** Temat wiedzy pasujący do rodzaju dolegliwości (link z formularza). */
-export const TEMAT_RODZAJU = Object.freeze({ headache: 'glowa', migraine: 'glowa', back: 'kregoslup', pelvic: 'intymne', herpes: 'opryszczka' });
+export const TEMAT_RODZAJU = Object.freeze({ headache: 'glowa', migraine: 'glowa', back: 'kregoslup', pelvic: 'intymne', herpes: 'opryszczka', infection: 'infekcja' });
 
 /**
  * @typedef {{ nazwa: string, cechy: string, pomaga: string[], leki?: string[], lekarz: string }} Mozliwosc
- * @typedef {{ id: 'glowa'|'kregoslup'|'intymne'|'opryszczka', tytul: string, wstep: string, mozliwe: Mozliwosc[], zrodla: { nazwa: string, url: string }[] }} Temat
+ * @typedef {{ id: 'glowa'|'kregoslup'|'intymne'|'opryszczka'|'infekcja', tytul: string, wstep: string, mozliwe: Mozliwosc[], zrodla: { nazwa: string, url: string }[] }} Temat
  */
 
 /** @type {Temat[]} */
@@ -218,6 +218,59 @@ const TEMATY = [
       { nazwa: 'NHS: Cold sores', url: 'https://www.nhs.uk/conditions/cold-sores/' },
       { nazwa: 'NHS: Genital herpes', url: 'https://www.nhs.uk/conditions/genital-herpes/' },
       { nazwa: 'NHS: Aciclovir', url: 'https://www.nhs.uk/medicines/aciclovir/' },
+    ],
+  },
+  {
+    id: 'infekcja',
+    tytul: 'Przeziębienie, grypa, ból gardła',
+    wstep: 'Większość infekcji górnych dróg oddechowych wywołują wirusy i mija sama w ciągu 1–2 tygodni. Antybiotyki na nie nie działają. Leczenie polega na łagodzeniu objawów i odpoczynku.',
+    mozliwe: [
+      {
+        nazwa: 'Przeziębienie',
+        cechy: 'Zaczyna się stopniowo, przez 2–3 dni. Głównie katar lub zatkany nos, kichanie, ból gardła, chrypka, kaszel, zmęczenie; czasem gorączka i bóle mięśni. Da się zwykle normalnie funkcjonować. Mija w ciągu 1–2 tygodni, kaszel może zostać dłużej.',
+        pomaga: [
+          'Odpoczynek, dużo płynów (mocz powinien być jasny), lekkie jedzenie.',
+          'Płukanie gardła ciepłą słoną wodą, ciepły napój z cytryną i miodem.',
+          'Para z gorącego prysznica na zatkany nos.',
+          'Krople lub spray obkurczające nos najwyżej przez tydzień (szczegóły w ulotce).',
+          'Witamina C, jeżówka (echinacea) czy czosnek mają słabe dowody działania.',
+          'Gdy masz gorączkę albo nie dajesz rady normalnie funkcjonować, zostań w domu i ogranicz kontakt z innymi.',
+        ],
+        leki: ['paracetamol', 'ibuprofen'],
+        lekarz: 'Gdy gorączka trwa dłużej niż 3 dni, objawy się nasilają albo nie mijają po 10 dniach, kaszel trwa ponad 3 tygodnie, pojawia się duszność lub ból w klatce. Także przy chorobie przewlekłej (np. cukrzyca, serce, płuca, nerki) lub osłabionej odporności.',
+      },
+      {
+        nazwa: 'Grypa',
+        cechy: 'Zaczyna się nagle, w ciągu kilku godzin: wysoka gorączka, bóle mięśni i całego ciała, wyczerpanie, suchy kaszel, ból gardła i głowy, kłopoty ze snem, brak apetytu. Zwykle trudno normalnie funkcjonować. Najbardziej zaraża przez pierwsze 5 dni.',
+        pomaga: [
+          'Odpoczynek i sen, dużo płynów.',
+          'Paracetamol lub ibuprofen na gorączkę i bóle.',
+          'Uwaga na leki złożone „na grypę”: często zawierają paracetamol. Nie łącz ich z osobnym paracetamolem.',
+          'Zostań w domu, myj często ręce, zasłaniaj usta przy kaszlu i kichaniu.',
+          'Antybiotyki nie leczą grypy. Najlepszą ochroną na kolejny sezon jest coroczne szczepienie.',
+        ],
+        leki: ['paracetamol', 'ibuprofen'],
+        lekarz: 'Gdy objawy nie poprawiają się po 7 dniach, czujesz się bardzo źle albo masz duszność. Szybciej, jeśli masz 65 lat lub więcej, jesteś w ciąży lub niedawno rodziłaś, masz chorobę przewlekłą albo osłabioną odporność.',
+      },
+      {
+        nazwa: 'Ból gardła',
+        cechy: 'Zwykle część przeziębienia lub grypy. Najczęściej mija sam w ciągu tygodnia; antybiotyki rzadko przyspieszają powrót do zdrowia.',
+        pomaga: [
+          'Płukanie ciepłą słoną wodą (pół łyżeczki soli na szklankę), potem wypluć.',
+          'Picie, chłodne lub miękkie jedzenie, ssanie kostek lodu albo twardych cukierków.',
+          'Tabletki do ssania lub spray znieczulający z apteki; zapytaj farmaceutę.',
+          'Unikanie dymu tytoniowego.',
+        ],
+        leki: ['paracetamol', 'ibuprofen'],
+        lekarz: 'Gdy ból nie mija po tygodniu, często wraca, masz bardzo wysoką gorączkę lub dreszcze, oznaki odwodnienia albo osłabioną odporność. Także przy guzku w szyi lub owrzodzeniu w ustach trwającym ponad 3 tygodnie.',
+      },
+    ],
+    zrodla: [
+      { nazwa: 'NHS: Common cold', url: 'https://www.nhs.uk/conditions/common-cold/' },
+      { nazwa: 'NHS: Flu', url: 'https://www.nhs.uk/conditions/flu/' },
+      { nazwa: 'NHS: Sore throat', url: 'https://www.nhs.uk/conditions/sore-throat/' },
+      { nazwa: 'NHS: Sepsis', url: 'https://www.nhs.uk/conditions/sepsis/' },
+      { nazwa: 'NHS: High temperature in adults', url: 'https://www.nhs.uk/symptoms/fever-in-adults/' },
     ],
   },
 ];

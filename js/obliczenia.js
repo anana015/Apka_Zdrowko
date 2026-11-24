@@ -6,7 +6,7 @@
  */
 
 /** @typedef {{ id?: string, entry_date: string, sleep_start?: string|null, sleep_end?: string|null, sleep_hours?: number|null, sleep_quality?: number|null, awakenings?: number|null, mood?: number|null, energy?: number|null, stress?: number|null, tags?: string[], note?: string|null }} Wpis */
-/** @typedef {{ id?: string, kind: 'headache'|'migraine'|'back'|'pelvic'|'herpes'|'other', custom_name?: string|null, started_at: string, ended_at?: string|null, intensity?: number|null, location?: string|null, features?: string[], triggers?: string[], relief?: 'none'|'partial'|'full'|null, note?: string|null }} Epizod */
+/** @typedef {{ id?: string, kind: 'headache'|'migraine'|'back'|'pelvic'|'herpes'|'infection'|'other', custom_name?: string|null, started_at: string, ended_at?: string|null, intensity?: number|null, location?: string|null, temperature?: number|null, features?: string[], triggers?: string[], relief?: 'none'|'partial'|'full'|null, note?: string|null }} Epizod */
 /** @typedef {{ id?: string, name: string, kind: 'medication'|'supplement', dose_text?: string|null, schedule?: { type: 'daily', times: string[] } | { type: 'as_needed' } | null, start_date?: string|null, end_date?: string|null, active?: boolean, note?: string|null }} Lek */
 /** @typedef {{ id?: string, medication_id: string, taken_at: string, dose_text?: string|null, reason?: string|null, episode_id?: string|null, scheduled_time?: string|null }} Przyjecie */
 
@@ -131,6 +131,9 @@ export function parsujLiczbe(v) {
 /** @param {Epizod} e */
 export const dzienEpizodu = (e) => ymd(new Date(e.started_at));
 
+/** Dolegliwości, które nie są bólem (inne słowa w interfejsie: „minęło” zamiast „ból minął”). @param {Epizod} e */
+export const czyBol = (e) => e.kind !== 'infection' && e.kind !== 'herpes';
+
 /** @param {Epizod} e */
 export const czyBolGlowy = (e) => e.kind === 'headache' || e.kind === 'migraine';
 
@@ -141,6 +144,7 @@ export function nazwaEpizodu(e) {
   if (e.kind === 'back') return 'Ból kręgosłupa';
   if (e.kind === 'pelvic') return 'Ból w okolicy intymnej';
   if (e.kind === 'herpes') return 'Opryszczka';
+  if (e.kind === 'infection') return 'Infekcja';
   return e.custom_name?.trim() || 'Inna dolegliwość';
 }
 

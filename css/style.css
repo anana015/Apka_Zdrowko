@@ -226,6 +226,10 @@ main { max-width: var(--szer); margin: 0 auto; padding: 1rem 1rem 2rem; }
   border-radius: var(--r-sredni); padding: 1rem;
 }
 .trwa-bol p { margin-bottom: 0.75rem; font-weight: 650; }
+.trwa-bol + .trwa-bol, .trwa-bol + .btn-bol { margin-top: 0.75rem; }
+.trwa-bol--spokojna { background: var(--noc-mgla); border-left-color: var(--noc); }
+.strefa-bolu__inne { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.strefa-bolu__inne .btn { flex: 1 1 auto; }
 
 /* ---------- Formularze ---------- */
 .grupa { border: 0; margin: 0 0 1.75rem; padding: 0; min-width: 0; }
@@ -478,8 +482,8 @@ details.rozwijane > summary { cursor: pointer; min-height: 44px; display: flex; 
 .podglad { background: var(--noc-mgla); border-radius: var(--r-sredni); padding: 0.875rem 1rem; margin: 0.75rem 0; }
 .podglad ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
 .ostrzezenie { color: var(--tekst); font-weight: 650; }
-.licznik { font-size: 0.875rem; font-weight: 650; color: var(--tekst-2); background: var(--powierzchnia-2); border-radius: 999px; padding: 0.125rem 0.5rem; vertical-align: middle; }
-.licznik:empty { display: none; }
+.licznik-dawek { font-size: 0.875rem; font-weight: 650; color: var(--tekst-2); background: var(--powierzchnia-2); border-radius: 999px; padding: 0.125rem 0.5rem; vertical-align: middle; }
+.licznik-dawek:empty { display: none; }
 .sekcja--leki-dnia { margin-top: 1.25rem; }
 
 /* Odczyt wyników z pliku */
@@ -621,3 +625,10 @@ body.zablokowane .gora, body.zablokowane main, body.zablokowane .nawigacja, body
 .odczyt-info summary::before, details.rozwijane > summary::before { content: "▸"; display: inline-block; width: 1.1em; }
 .odczyt-info details[open] > summary::before, details.rozwijane[open] > summary::before { content: "▾"; }
 .odczyt-info summary::-webkit-details-marker, details.rozwijane > summary::-webkit-details-marker { display: none; }
+
+/* Przycisk tekstowy „+ Dodaj …” dla zwiniętych pól */
+.przycisk-tekst {
+  background: none; border: 0; padding: 0.5rem 0; min-height: 44px; cursor: pointer;
+  color: var(--noc); font-weight: 650; font-size: 1rem;
+}
+.przycisk-tekst:hover { text-decoration: underline; }

@@ -3,7 +3,7 @@
  * Czerwone flagi (specyfikacja, sekcja 4.7). Czyste funkcje, bez DOM.
  *
  * Lista sprawdzona 24.11.2026 ze źródłami: NHS (headaches, back-pain, pelvic-pain, testicle-pain,
- * ectopic-pregnancy) i NICE CG150. Treść opracowana własnymi słowami i dostosowana do Polski (112, SOR).
+ * ectopic-pregnancy, cold-sores, genital-herpes, flu, common-cold, sore-throat, sepsis, fever-in-adults) i NICE CG150. Treść opracowana własnymi słowami i dostosowana do Polski (112, SOR).
  * Nie zastępuje porady lekarza; warto pokazać ją swojemu lekarzowi. Przegląd: co najmniej raz w roku.
  *
  * Poziomy:
@@ -12,10 +12,10 @@
  *   'kryzys' — myśli samobójcze: numery wsparcia i 112.
  */
 
-export const WERSJA_LISTY = '1.1.0 (24.11.2026)';
+export const WERSJA_LISTY = '1.2.0 (24.11.2026)';
 export const ZWERYFIKOWANO = true;
 
-/** @typedef {'glowa'|'kregoslup'|'intymne'|'opryszczka'|'ogolne'} Obszar */
+/** @typedef {'glowa'|'kregoslup'|'intymne'|'opryszczka'|'infekcja'|'ogolne'} Obszar */
 /**
  * @typedef {{ id: string, etykieta: string, obszar: Obszar, typ: 'pilne'|'lekarz'|'kryzys', wEpizodzie: boolean, slowa: string[] }} Flaga
  */
@@ -123,6 +123,48 @@ export const FLAGI = Object.freeze([
     etykieta: 'Pierwszy raz zmiany na narządach płciowych',
     slowa: [] },
 
+  // ---------- Infekcja: przeziębienie, grypa, ból gardła (NHS: flu, common-cold, sore-throat, sepsis) ----------
+  { id: 'inf_oddech', obszar: 'infekcja', typ: 'pilne', wEpizodzie: true,
+    etykieta: 'Duża trudność z oddychaniem: łapanie powietrza, duszenie się, nie da się powiedzieć całego zdania',
+    slowa: ['nie moge zlapac tchu', 'nie moge mowic pelnymi zdaniami', 'lapie powietrze'] },
+  { id: 'inf_klatka', obszar: 'infekcja', typ: 'pilne', wEpizodzie: true,
+    etykieta: 'Nagły ból w klatce piersiowej',
+    slowa: [] },
+  { id: 'inf_krew', obszar: 'infekcja', typ: 'pilne', wEpizodzie: true,
+    etykieta: 'Odkrztuszanie krwi',
+    slowa: ['kaszle krwia', 'kaszel z krwia', 'krew w plwocinie', 'odkrztuszam krew', 'pluje krwia'] },
+  { id: 'inf_przelykanie', obszar: 'infekcja', typ: 'pilne', wEpizodzie: true,
+    etykieta: 'Nie da się przełknąć (nawet śliny), ślinienie się albo świszczący, piskliwy dźwięk przy wdechu',
+    slowa: ['nie moge przelknac', 'nie moge przelykac', 'nie przelkne sliny', 'slinie sie'] },
+  { id: 'inf_sepsa', obszar: 'infekcja', typ: 'pilne', wEpizodzie: true,
+    etykieta: 'Splątanie, bełkotliwa mowa, bardzo szybki oddech albo sina, blada lub marmurkowa skóra, usta czy język',
+    slowa: ['sine usta', 'marmurkowa skora', 'sinieje'] },
+  { id: 'inf_wysypka', obszar: 'infekcja', typ: 'pilne', wEpizodzie: true,
+    etykieta: 'Wysypka, która nie blednie pod naciskiem szklanki',
+    slowa: [] },
+  { id: 'inf_dusznosc', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Duszność, zadyszka przy niewielkim wysiłku albo ból w klatce przy kaszlu',
+    slowa: ['dusznosc', 'zadyszka'] },
+  { id: 'inf_bardzo_zle', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Bardzo złe samopoczucie albo bardzo wysoka gorączka, która nie spada po lekach',
+    slowa: ['goraczka nie spada', 'nie spada goraczka'] },
+  { id: 'inf_odwodnienie', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Oznaki odwodnienia: mało moczu, ciemny mocz o silnym zapachu, nie da się pić',
+    slowa: [] },
+  { id: 'inf_ryzyko', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: true,
+    etykieta: 'Wiek 65+, ciąża lub niedawny poród, choroba przewlekła (np. cukrzyca, serca, płuc, nerek) albo osłabiona odporność',
+    slowa: [] },
+  // Wyliczane z czasu trwania (nie do zaznaczenia w formularzu).
+  { id: 'inf_goraczka_3dni', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: false,
+    etykieta: 'Gorączka (38°C lub więcej) trwa dłużej niż 3 dni',
+    slowa: [] },
+  { id: 'inf_7dni', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: false,
+    etykieta: 'Objawy infekcji trwają ponad tydzień bez poprawy',
+    slowa: [] },
+  { id: 'inf_kaszel_3tyg', obszar: 'infekcja', typ: 'lekarz', wEpizodzie: false,
+    etykieta: 'Kaszel trwa dłużej niż 3 tygodnie',
+    slowa: [] },
+
   // ---------- Ogólne ----------
   { id: 'kryzys_samobojcze', obszar: 'ogolne', typ: 'kryzys', wEpizodzie: false,
     etykieta: 'Myśli samobójcze',
@@ -135,10 +177,31 @@ export const FLAGA_NASILENIE_10 = Object.freeze({
 
 /** Które obszary flag pokazać w formularzu dolegliwości danego rodzaju. */
 export const OBSZARY_RODZAJU = Object.freeze({
-  headache: ['glowa'], migraine: ['glowa'], back: ['kregoslup'], pelvic: ['intymne'], herpes: ['opryszczka'], other: ['glowa', 'kregoslup', 'intymne'],
+  headache: ['glowa'], migraine: ['glowa'], back: ['kregoslup'], pelvic: ['intymne'], herpes: ['opryszczka'], infection: ['infekcja'], other: ['glowa', 'kregoslup', 'intymne'],
 });
 
-export const NAZWY_OBSZAROW = Object.freeze({ glowa: 'Ból głowy', kregoslup: 'Ból kręgosłupa', intymne: 'Okolice intymne i podbrzusze', opryszczka: 'Opryszczka', ogolne: 'Ogólne' });
+export const NAZWY_OBSZAROW = Object.freeze({ glowa: 'Ból głowy', kregoslup: 'Ból kręgosłupa', intymne: 'Okolice intymne i podbrzusze', opryszczka: 'Opryszczka', infekcja: 'Przeziębienie, grypa, ból gardła', ogolne: 'Ogólne' });
+
+/** Próg gorączki u dorosłych wg NHS (fever-in-adults): 38°C lub więcej. */
+export const PROG_GORACZKI = 38;
+const DOBA = 24 * 3600000;
+
+/**
+ * Flagi wynikające z czasu trwania infekcji, która jeszcze trwa (NHS: common-cold — gorączka > 3 dni,
+ * kaszel > 3 tygodnie; flu — brak poprawy po 7 dniach).
+ * @param {import('./obliczenia.js').Epizod} e @param {Date} teraz
+ */
+function flagiCzasuTrwania(e, teraz) {
+  if (e.kind !== 'infection' || e.ended_at) return [];
+  const doby = (teraz.getTime() - new Date(e.started_at).getTime()) / DOBA;
+  const objawy = e.features ?? [];
+  const goraczka = objawy.includes('goraczka') || (e.temperature != null && e.temperature >= PROG_GORACZKI);
+  return [
+    goraczka && doby > 3 ? 'inf_goraczka_3dni' : null,
+    doby > 7 ? 'inf_7dni' : null,
+    objawy.includes('kaszel') && doby > 21 ? 'inf_kaszel_3tyg' : null,
+  ].filter((x) => x != null);
+}
 
 /** Numery pomocy (sprawdzone na gov.pl, 23.11.2026). */
 export const NUMERY = Object.freeze({
@@ -166,11 +229,13 @@ export function sprawdzTekst(tekst) {
   return FLAGI.filter((f) => f.slowa.some((s) => t.includes(normalizuj(s)))).map((f) => f.id);
 }
 
-/** @param {import('./obliczenia.js').Epizod} e */
-export function sprawdzEpizod(e) {
+/** @param {import('./obliczenia.js').Epizod} e @param {Date} [teraz] */
+export function sprawdzEpizod(e, teraz = new Date()) {
   const ids = new Set(sprawdzTekst(e.note));
   for (const f of e.features ?? []) if (FLAGI.some((fl) => fl.id === f)) ids.add(f);
-  if (e.intensity === 10) ids.add(FLAGA_NASILENIE_10.id);
+  // 10/10 przy infekcji oznacza „bardzo źle się czuję”, nie najsilniejszy ból — to obejmuje flaga inf_bardzo_zle.
+  if (e.intensity === 10 && e.kind !== 'infection') ids.add(FLAGA_NASILENIE_10.id);
+  for (const id of flagiCzasuTrwania(e, teraz)) ids.add(id);
   return [...ids];
 }
 
@@ -184,9 +249,13 @@ export const sprawdzWpis = (w) => sprawdzTekst(w.note);
 export function aktywneFlagi({ wpisy, epizody, teraz = new Date(), oknoGodzin = 48 }) {
   const granica = teraz.getTime() - oknoGodzin * 3600000;
   const ids = new Set();
+  const granicaTrwajacych = teraz.getTime() - 45 * DOBA; // zapomniane, niezamknięte epizody sprzed 1,5 miesiąca pomijamy
   for (const e of epizody) {
     const t = new Date(e.started_at).getTime();
-    if (t >= granica && t <= teraz.getTime() + 3600000) sprawdzEpizod(e).forEach((id) => ids.add(id));
+    const wOknie = t >= granica && t <= teraz.getTime() + 3600000;
+    // Infekcja trwa dniami, więc trwająca liczy się także po 48 h (inne niezamknięte epizody to zwykle zapomniany „koniec”).
+    const trwa = e.kind === 'infection' && !e.ended_at && t >= granicaTrwajacych && t <= teraz.getTime();
+    if (wOknie || trwa) sprawdzEpizod(e, teraz).forEach((id) => ids.add(id));
   }
   for (const w of wpisy) {
     const [y, m, d] = w.entry_date.split('-').map(Number);

@@ -120,7 +120,7 @@
 
       <section class="sekcja sekcja--leki-dnia" aria-labelledby="dzis-leki-tytul">
         <div class="sekcja__naglowek">
-          <h2 id="dzis-leki-tytul">Leki i suplementy <span class="licznik" id="dzis-leki-postep"></span></h2>
+          <h2 id="dzis-leki-tytul">Leki i suplementy <span class="licznik-dawek" id="dzis-leki-postep"></span></h2>
           <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dorazny">Dodaj doraźny</button>
         </div>
         <div id="dzis-leki"></div>
@@ -196,7 +196,8 @@
         <fieldset class="grupa">
           <legend class="grupa__tytul">Znaczniki dnia</legend>
           <div class="chipy" id="wpis-tagi"></div>
-          <div class="dodaj-wiersz">
+          <button type="button" class="przycisk-tekst" id="wpis-tag-pokaz" aria-expanded="false" aria-controls="wpis-tag-pole">+ Własny znacznik</button>
+          <div class="dodaj-wiersz" id="wpis-tag-pole" hidden>
             <label for="wpis-nowy-tag" class="sr-only">Nowy znacznik dnia</label>
             <input type="text" id="wpis-nowy-tag" maxlength="40" placeholder="Własny znacznik, np. upał" enterkeyhint="done">
             <button type="button" class="btn btn-drugorzedny" id="wpis-dodaj-tag">Dodaj</button>
@@ -204,8 +205,11 @@
         </fieldset>
 
         <div class="grupa">
-          <label class="grupa__tytul" for="wpis-notatka">Notatka</label>
-          <textarea id="wpis-notatka" name="notatka" rows="3" maxlength="2000" placeholder="Co warto zapamiętać z tego dnia?"></textarea>
+          <button type="button" class="przycisk-tekst" id="wpis-notatka-pokaz" aria-expanded="false" aria-controls="wpis-notatka-pole">+ Dodaj notatkę</button>
+          <div id="wpis-notatka-pole" hidden>
+            <label class="grupa__tytul" for="wpis-notatka">Notatka</label>
+            <textarea id="wpis-notatka" name="notatka" rows="3" maxlength="2000" placeholder="Co warto zapamiętać z tego dnia?"></textarea>
+          </div>
         </div>
 
         <div class="pasek-zapisu">
@@ -558,6 +562,7 @@
           <label class="opcja"><input type="radio" name="kind" value="back"><span>Ból kręgosłupa</span></label>
           <label class="opcja"><input type="radio" name="kind" value="pelvic"><span>Ból w okolicy intymnej lub podbrzusza</span></label>
           <label class="opcja"><input type="radio" name="kind" value="herpes"><span>Opryszczka</span></label>
+          <label class="opcja"><input type="radio" name="kind" value="infection"><span>Przeziębienie, grypa, ból gardła</span></label>
           <label class="opcja"><input type="radio" name="kind" value="other"><span>Inna dolegliwość</span></label>
         </div>
       </fieldset>
@@ -579,15 +584,20 @@
       </div>
 
       <div class="pole">
-        <label for="ep-nasilenie">Nasilenie (0–10)</label>
+        <label for="ep-nasilenie" id="ep-nasilenie-etykieta">Nasilenie (0–10)</label>
         <div class="suwak">
           <input type="range" id="ep-nasilenie" min="0" max="10" step="1" value="5" aria-describedby="ep-nasilenie-wartosc">
           <output id="ep-nasilenie-wartosc" for="ep-nasilenie" class="suwak__wartosc">–</output>
         </div>
       </div>
 
+      <div class="pole" id="ep-temp-pole" hidden>
+        <label for="ep-temperatura">Najwyższa temperatura <span class="opcjonalne">(°C, opcjonalnie)</span></label>
+        <input type="text" id="ep-temperatura" inputmode="decimal" maxlength="4" placeholder="np. 38,2" autocomplete="off">
+      </div>
+
       <div class="pole">
-        <label for="ep-lokalizacja">Gdzie boli</label>
+        <label for="ep-lokalizacja" id="ep-lokalizacja-etykieta">Gdzie boli</label>
         <input type="text" id="ep-lokalizacja" list="lista-lokalizacji" maxlength="60">
         <datalist id="lista-lokalizacji"></datalist>
       </div>
@@ -627,7 +637,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="pole">
+      <fieldset class="pole" id="ep-ulga">
         <legend>Ulga po 2 godzinach</legend>
         <div class="przelacznik przelacznik--4">
           <input type="radio" name="relief" id="ulga-brak-oceny" value="" checked><label for="ulga-brak-oceny">Nie oceniam</label>

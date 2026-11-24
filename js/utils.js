@@ -93,7 +93,8 @@ export function toast(tekst, { akcja, poKliknieciu, czas = 5000 } = {}) {
       on: { click: () => { el.remove(); poKliknieciu(); } },
     }));
   }
-  kontener.append(el);
+  // Jeden komunikat naraz: nowy zastępuje poprzedni, żeby nie zasłaniały formularza i paska zapisu.
+  kontener.replaceChildren(el);
   setTimeout(() => el.remove(), akcja ? czas * 1.6 : czas);
 }
 

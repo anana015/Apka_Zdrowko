@@ -1,13 +1,19 @@
 // @ts-check
 /** Znaczniki dnia i czynniki epizodów: wspólna lista, dopisywana w locie. */
 import * as db from './db.js';
-import { DOMYSLNE_TAGI } from './teksty.js';
+import { DOMYSLNE_TAGI, NOWE_TAGI_0_9 } from './teksty.js';
 import { normalizujTag } from './obliczenia.js';
 import { h } from './utils.js';
 
 /** @returns {Promise<string[]>} */
 export async function pobierzTagi() {
-  return (await db.meta('tagi', null)) ?? [...DOMYSLNE_TAGI];
+  const zapisane = await db.meta('tagi', null);
+  if (!zapisane) return [...DOMYSLNE_TAGI];
+  if (await db.meta('tagi-0.9', null)) return zapisane;
+  const uzupelnione = [...zapisane, ...NOWE_TAGI_0_9.filter((t) => !zapisane.includes(t))];
+  await db.ustawMeta('tagi', uzupelnione);
+  await db.ustawMeta('tagi-0.9', true);
+  return uzupelnione;
 }
 
 /** @param {string} surowy @returns {Promise<string|null>} */

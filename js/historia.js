@@ -3,7 +3,7 @@
 import * as db from './db.js';
 import { $, h, ikona } from './utils.js';
 import {
-  ymd, formatDzien, formatMiesiac, formatGodziny, snuZWpisu, dzienEpizodu, nazwaEpizodu, hhmm,
+  ymd, formatDzien, formatMiesiac, formatGodziny, snuZWpisu, dzienEpizodu, nazwaEpizodu, hhmm, liczbaPL,
 } from './obliczenia.js';
 import { otworzEpizod } from './dolegliwosci.js';
 
@@ -105,7 +105,7 @@ function renderDzien({ wpisy, epizody, przyjecia, leki }) {
     eps.length ? h('ul', { class: 'lista' }, eps.map((e) => h('li', {},
       h('div', { class: 'lista__tresc' },
         h('p', { class: 'lista__tytul' }, nazwaEpizodu(e), ' ', e.intensity != null ? h('span', { class: 'znacznik znacznik--bol', text: `${e.intensity}/10` }) : null),
-        h('p', { class: 'lista__opis', text: e.ended_at ? `${hhmm(e.started_at)}–${hhmm(e.ended_at)}` : `od ${hhmm(e.started_at)}` })),
+        h('p', { class: 'lista__opis', text: [e.ended_at ? `${hhmm(e.started_at)}–${hhmm(e.ended_at)}` : `od ${hhmm(e.started_at)}`, e.temperature != null ? `najwyżej ${liczbaPL(e.temperature, 1)}°C` : null].filter(Boolean).join(', ') })),
       h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Edytuj', 'aria-label': `Edytuj: ${nazwaEpizodu(e)} od ${hhmm(e.started_at)}`, on: { click: () => otworzEpizod(e.id) } })))) : null,
     prz.length ? h('h3', { class: 'sekcja', text: 'Przyjęte leki i suplementy' }) : null,
     prz.length ? h('ul', { class: 'lista lista--zwarta' }, prz.map((p) => h('li', { text: `${hhmm(p.taken_at)} ${lekPoId.get(p.medication_id)?.name ?? 'Usunięty lek'}${p.reason ? `, ${p.reason}` : ''}` }))) : null,

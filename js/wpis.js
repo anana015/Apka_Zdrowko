@@ -8,10 +8,10 @@ import * as db from './db.js';
 import { $, $$, h, ikona, toast, ustawRadio, wartoscRadia, dwaDotkniecia } from './utils.js';
 import {
   ymd, dodajDni, formatDzien, formatKrotki, zbudujCzasySnu, godzinySnu, formatGodziny, hhmm,
-  poprzedniWpis, dawkiNaDzien, dzienEpizodu, nazwaEpizodu, czasNaDate, parsujLiczbe, roznicaDni, parsujSenZeSchowka, parsujNoceZeSchowka,
+  poprzedniWpis, dawkiNaDzien, dzienEpizodu, nazwaEpizodu, czasNaDate, parsujLiczbe, roznicaDni, parsujSenZeSchowka, parsujNoceZeSchowka, czyBol, liczbaPL,
 } from './obliczenia.js';
 import { pobierzTagi, dodajTag, budujChipy, zaznaczoneChipy, dolaczChip } from './tagi.js';
-import { otworzEpizod, zacznijBol, zakonczBol } from './dolegliwosci.js';
+import { otworzEpizod, zacznijBol, zakonczBol, zacznijInfekcje } from './dolegliwosci.js';
 import { otworzPrzyjecie } from './leki.js';
 
 export const tytul = 'Dziś';
@@ -105,6 +105,9 @@ export function init() {
     oznaczZmiany();
   };
   $('#wpis-dodaj-tag').addEventListener('click', dodaj);
+  // Rzadziej używane pola są zwinięte, żeby formularz był krótszy.
+  $('#wpis-tag-pokaz').addEventListener('click', () => { pokazZwiniete('#wpis-tag-pokaz', '#wpis-tag-pole', true); nowyTag.focus(); });
+  $('#wpis-notatka-pokaz').addEventListener('click', () => { pokazZwiniete('#wpis-notatka-pokaz', '#wpis-notatka-pole', true); $('#wpis-notatka').focus(); });
   nowyTag.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); dodaj(); } });
 
   form.addEventListener('submit', (e) => { e.preventDefault(); zapiszWpis(); });
@@ -165,6 +168,7 @@ async function wypelnijFormularz() {
   synchronizujSkale();
   /** @type {HTMLInputElement} */ ($('#wpis-wybudzenia')).value = zrodlo?.awakenings != null ? String(zrodlo.awakenings) : '';
   /** @type {HTMLTextAreaElement} */ ($('#wpis-notatka')).value = zrodlo?.note ?? '';
+  pokazZwiniete('#wpis-notatka-pokaz', '#wpis-notatka-pole', Boolean(zrodlo?.note));
   budujChipy($('#wpis-tagi'), 'tagi', await pobierzTagi(), zrodlo?.tags ?? []);
   pokazTrybSnu();
 
@@ -232,6 +236,13 @@ async function zapiszWpis() {
 }
 
 /** Odświeża listy (bez czyszczenia formularza, w którym ktoś może pisać). */
+/** Przełącza zwinięte pole: przycisk „+ …” albo samo pole. @param {string} przycisk @param {string} pole @param {boolean} widoczne */
+function pokazZwiniete(przycisk, pole, widoczne) {
+  $(pole).hidden = !widoczne;
+  $(przycisk).hidden = widoczne;
+  $(przycisk).setAttribute('aria-expanded', String(widoczne));
+}
+
 export async function odswiez() {
   const dane = await db.wczytajWszystko();
   renderBol(dane);
@@ -244,20 +255,32 @@ function renderBol({ epizody }) {
   const strefa = $('#dzis-bol');
   if (data !== ymd()) { strefa.replaceChildren(); strefa.hidden = true; return; }
   strefa.hidden = false;
-  const granica = Date.now() - 72 * 3600000;
-  const trwa = epizody
-    .filter((e) => !e.ended_at && new Date(e.started_at).getTime() >= granica)
-    .sort((a, b) => (a.started_at < b.started_at ? 1 : -1))[0];
-  if (trwa) {
-    strefa.replaceChildren(h('div', { class: 'trwa-bol' },
-      h('p', { text: `${nazwaEpizodu(trwa)} trwa od ${hhmm(trwa.started_at)}${dzienEpizodu(trwa) !== data ? ` (${formatKrotki(dzienEpizodu(trwa))})` : ''}` }),
+  const teraz = Date.now();
+  // Ból: trwający z ostatnich 72 h. Infekcja trwa dniami, więc pokazujemy ją do 30 dni.
+  const trwajace = epizody
+    .filter((e) => !e.ended_at && new Date(e.started_at).getTime() >= teraz - (e.kind === 'infection' ? 30 * 24 : 72) * 3600000)
+    .sort((a, b) => (a.started_at < b.started_at ? 1 : -1));
+  const karty = trwajace.slice(0, 2).map((e) => {
+    const dni = roznicaDni(dzienEpizodu(e), ymd()); // dni kalendarzowe: wczoraj wieczorem = 2. dzień
+    const opis = e.kind === 'infection'
+      ? `${nazwaEpizodu(e)} trwa ${dni < 1 ? 'od dziś' : `${dni + 1}. dzień (od ${formatKrotki(dzienEpizodu(e))})`}${e.temperature != null ? `, najwyżej ${liczbaPL(e.temperature, 1)}°C` : ''}`
+      : `${nazwaEpizodu(e)} trwa od ${hhmm(e.started_at)}${dzienEpizodu(e) !== data ? ` (${formatKrotki(dzienEpizodu(e))})` : ''}`;
+    return h('div', { class: `trwa-bol${czyBol(e) ? '' : ' trwa-bol--spokojna'}` },
+      h('p', { text: opis }),
       h('div', { class: 'przyciski' },
-        h('button', { type: 'button', class: 'btn btn-glowny', text: 'Ból minął', on: { click: () => zakonczBol(trwa.id) } }),
-        h('button', { type: 'button', class: 'btn btn-drugorzedny', text: 'Uzupełnij szczegóły', on: { click: () => otworzEpizod(trwa.id) } }),
-      )));
-  } else {
-    strefa.replaceChildren(h('button', { type: 'button', class: 'btn-bol', on: { click: zacznijBol } }, ikona('bol'), 'Zaczął się ból'));
-  }
+        h('button', { type: 'button', class: 'btn btn-glowny', text: czyBol(e) ? 'Ból minął' : 'Już minęło', on: { click: () => zakonczBol(e.id) } }),
+        h('button', { type: 'button', class: 'btn btn-drugorzedny', text: e.kind === 'infection' ? 'Objawy, temperatura' : 'Uzupełnij szczegóły', on: { click: () => otworzEpizod(e.id) } }),
+      ));
+  });
+  const bolTrwa = trwajace.some((e) => czyBol(e) && new Date(e.started_at).getTime() >= teraz - 72 * 3600000);
+  const infekcjaTrwa = trwajace.some((e) => e.kind === 'infection');
+  strefa.replaceChildren(
+    ...karty,
+    bolTrwa ? '' : h('button', { type: 'button', class: 'btn-bol', on: { click: zacznijBol } }, ikona('bol'), 'Zaczął się ból'),
+    h('div', { class: 'strefa-bolu__inne' },
+      infekcjaTrwa ? '' : h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Przeziębienie, grypa', on: { click: zacznijInfekcje } }),
+      h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Inna dolegliwość', on: { click: () => otworzEpizod(null, { data }) } })),
+  );
 }
 
 /** @param {Awaited<ReturnType<typeof db.wczytajWszystko>>} dane */

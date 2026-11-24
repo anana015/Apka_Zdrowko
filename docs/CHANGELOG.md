@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0 (2026-11-24) — przeziębienie i grypa, nowe znaczniki, krótszy formularz
+**Najpierw uruchom migrację `0007_infekcja.sql` w SQL Editorze** (nowy rodzaj dolegliwości i kolumna temperatury). Bez niej synchronizacja infekcji zakończy się błędem.
+
+### Dodano
+- Nowy rodzaj dolegliwości **„Przeziębienie, grypa, ból gardła”**:
+  - własne objawy: gorączka, katar, zatkany nos, kichanie, ból gardła, chrypka, kaszel, dreszcze, bóle mięśni, zmęczenie, ból głowy, ucisk w uszach lub zatokach, utrata węchu lub smaku, brak apetytu;
+  - pole „Najwyższa temperatura” (34–43 °C); od 38 °C zaznacza „gorączkę” (próg NHS);
+  - zamiast „Nasilenie” jest „Jak źle się czujesz (0–10)”; bez pola „Ulga po 2 godzinach”.
+- Lista objawów alarmowych 1.2.0, nowa grupa „Przeziębienie, grypa, ból gardła” (NHS: flu, common-cold, sore-throat, sepsis, fever-in-adults):
+  - do zaznaczenia: m.in. duża duszność, ból w klatce, odkrztuszanie krwi, kłopot z przełykaniem, objawy możliwej sepsy, oznaki odwodnienia, grupa ryzyka;
+  - wyliczane automatycznie dla trwającej infekcji: gorączka ponad 3 dni, brak poprawy po tygodniu, kaszel ponad 3 tygodnie.
+- Wiedza: temat „Przeziębienie, grypa, ból gardła” (czym się różnią, co pomaga, kiedy do lekarza, uwaga na leki złożone z paracetamolem).
+- Dziś: przyciski „Przeziębienie, grypa” i „Inna dolegliwość” pod „Zaczął się ból”. Trwająca infekcja ma własną kartę: „Infekcja trwa 3. dzień, najwyżej 38,6°C”, przyciski „Już minęło” i „Objawy, temperatura”. Karta zostaje do 30 dni.
+- Znaczniki dnia: brak kawy, mało wody, dużo pracy, zmęczenie, mało ruchu, ekrany do późna. Dopisują się raz także do zapisanej listy. Zależności sprawdzą je automatycznie, gdy będzie dość danych.
+- Temperatura w Historii i w raporcie dla lekarza.
+
+### Zmieniono (UX)
+- Formularz Dziś krótszy: notatka i własny znacznik są zwinięte pod „+ Dodaj notatkę” i „+ Własny znacznik”. Notatka rozwija się sama, gdy już jest wpisana.
+- Na ekranie jest jeden komunikat naraz: nowy zastępuje poprzedni, zamiast piętrzyć się nad paskiem zapisu.
+- Dolegliwości niebędące bólem (infekcja, opryszczka): „Już minęło” zamiast „Ból minął”, spokojniejszy kolor karty.
+
 ## 0.8.0 (2026-11-24) — odczyt wyników z PDF i zdjęć, poprawki UX
 Bez migracji bazy.
 

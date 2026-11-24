@@ -323,7 +323,8 @@ async function drukujRaport() {
     h('section', {}, h('h2', { text: 'Dolegliwości' }), epizody.length ? tabela(['Data', 'Rodzaj', 'Godziny', 'Nasilenie', 'Objawy', 'Leki', 'Ulga po 2 h'],
       epizody.map((e) => [
         formatKrotki(dzienEpizodu(e)), nazwaEpizodu(e), e.ended_at ? `${hhmm(e.started_at)}–${hhmm(e.ended_at)}` : `od ${hhmm(e.started_at)}`,
-        e.intensity != null ? `${e.intensity}/10` : null, (e.features ?? []).map(objaw).filter(Boolean).join(', ') || null,
+        e.intensity != null ? `${e.intensity}/10` : null,
+        [e.temperature != null ? `${liczbaPL(e.temperature, 1)}°C` : null, ...(e.features ?? []).map(objaw)].filter(Boolean).join(', ') || null,
         dane.przyjecia.filter((x) => x.episode_id === e.id).map((x) => `${lekPoId.get(x.medication_id)?.name ?? '?'} ${hhmm(x.taken_at)}`).join(', ') || null,
         e.relief ? ULGA[/** @type {'none'|'partial'|'full'} */ (e.relief)] : null,
       ])) : h('p', { text: 'Brak w tym okresie.' })),

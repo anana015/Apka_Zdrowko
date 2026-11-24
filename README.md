@@ -2,7 +2,7 @@
 
 Prywatna aplikacja PWA do zapisywania snu, nastroju, dolegliwości, leków i wyników badań. Pokazuje wykresy i możliwe zależności w danych. Nie stawia diagnoz i nie zastępuje lekarza.
 
-**Stan: 0.8.0.** Logowanie z obowiązkowym TOTP, synchronizacja z Supabase (Frankfurt, UE), działanie offline, dolegliwości z listą objawów alarmowych, leki, badania z dokumentami i odczytem wyników z PDF lub zdjęć (na urządzeniu), wykresy, zależności i raport dla lekarza. Historia zmian: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+**Stan: 0.9.0.** Logowanie z obowiązkowym TOTP, synchronizacja z Supabase (Frankfurt, UE), działanie offline, dolegliwości z listą objawów alarmowych, leki, badania z dokumentami i odczytem wyników z PDF lub zdjęć (na urządzeniu), wykresy, zależności i raport dla lekarza. Historia zmian: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 Hosting: GitHub Pages z publicznego repozytorium. Migracje bazy wgrywa się ręcznie w SQL Editorze Supabase (pliki `supabase/migrations/`, po kolei).
 
@@ -53,7 +53,7 @@ js/eksport.js       JSON/CSV                                    ← testowane
 js/demo.js          generator danych syntetycznych
 fonts/              Atkinson Hyperlegible Next (OFL), lokalnie
 supabase/config.jsonc ustawienia Auth i API (CLI 3.x)
-supabase/migrations/  0001 tabele i RLS, 0002 Storage, 0003 obowiązkowe MFA, 0004–0005 rodzaje dolegliwości, 0006 zgoda
+supabase/migrations/  0001 tabele i RLS, 0002 Storage, 0003 obowiązkowe MFA, 0004–0005 rodzaje dolegliwości, 0006 zgoda, 0007 infekcja i temperatura
 .github/workflows/    ci.yml (lint, typy, precache, testy)
 tests/              node --test
 ```
