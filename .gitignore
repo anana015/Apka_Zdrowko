@@ -1,0 +1,21 @@
+node_modules/
+
+# Sekrety — nigdy do repozytorium (repozytorium jest publiczne)
+.env
+.env.*
+*.key
+*.pem
+supabase/.temp/
+supabase/.branches/
+
+# Eksporty i kopie danych zdrowotnych
+dziennik-zdrowia-*.json
+dziennik-zdrowia-*.csv
+*.csv
+kopia-*
+*.sql.gz
+*.age
+
+# System
+.DS_Store
+Thumbs.db
