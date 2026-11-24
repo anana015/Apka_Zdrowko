@@ -1,0 +1,8 @@
+git init -b main
+git config core.hooksPath scripts/git-hooks   # lokalny skan sekretów przed commitem
+npm ci
+npm test                                      # powinno być 0 błędów
+git add .
+git commit -m "Szkic 0.1 i konfiguracja etapu 0"
+git remote add origin git@github.com:<twój-login>/dziennik-zdrowia.git
+git push -u origin main
