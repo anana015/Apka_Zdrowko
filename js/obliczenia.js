@@ -311,3 +311,46 @@ export function parsujSenZeSchowka(tekst) {
   }
   return null;
 }
+
+/**
+ * Wiele nocy ze schowka (skrót „Dziennik sen”, wersja 14-dniowa): każda linia zawiera
+ * początek i koniec fragmentu snu „RRRR-MM-DD GG:MM;RRRR-MM-DD GG:MM”. Fragmenty z przerwą
+ * do 2 godzin łączymy w jedną noc; noc przypisujemy do dnia pobudki. Dla dnia z kilkoma
+ * okresami snu (np. drzemka) zostaje najdłuższy.
+ * @param {string} tekst
+ * @returns {{ dataPobudki: string, sleep_start: string, sleep_end: string, godziny: number }[]}
+ */
+export function parsujNoceZeSchowka(tekst) {
+  if (!tekst) return [];
+  /** @type {{ start: Date, koniec: Date }[]} */
+  const fragmenty = [];
+  for (const linia of tekst.split(/\r?\n/)) {
+    const d = [...linia.matchAll(/(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/g)];
+    if (d.length < 2) continue;
+    const start = czasNaDate(d[0][1], `${d[0][2]}:${d[0][3]}`);
+    const koniec = czasNaDate(d[1][1], `${d[1][2]}:${d[1][3]}`);
+    if (koniec > start) fragmenty.push({ start, koniec });
+  }
+  fragmenty.sort((a, b) => a.start.getTime() - b.start.getTime());
+  /** @type {{ start: Date, koniec: Date }[]} */
+  const okresy = [];
+  for (const f of fragmenty) {
+    const ost = okresy[okresy.length - 1];
+    if (ost && f.start.getTime() <= ost.koniec.getTime() + 2 * 3600000) {
+      if (f.koniec > ost.koniec) ost.koniec = f.koniec;
+    } else {
+      okresy.push({ ...f });
+    }
+  }
+  /** @type {Map<string, { dataPobudki: string, sleep_start: string, sleep_end: string, godziny: number }>} */
+  const poDniu = new Map();
+  for (const o of okresy) {
+    const godziny = Math.round(((o.koniec.getTime() - o.start.getTime()) / 3600000) * 10) / 10;
+    if (godziny < 1 || godziny > 20) continue;
+    const dzien = ymd(o.koniec);
+    const noc = { dataPobudki: dzien, sleep_start: o.start.toISOString(), sleep_end: o.koniec.toISOString(), godziny };
+    const obecna = poDniu.get(dzien);
+    if (!obecna || obecna.godziny < godziny) poDniu.set(dzien, noc);
+  }
+  return [...poDniu.values()].sort((a, b) => (a.dataPobudki < b.dataPobudki ? -1 : 1));
+}

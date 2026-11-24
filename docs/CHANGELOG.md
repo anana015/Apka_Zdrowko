@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 (2026-11-24) — sen z 14 dni
+- „Wklej sen” przyjmuje wiele fragmentów snu (skrót z 14 dni), łączy je w noce (przerwa do 2 h), przypisuje do dnia pobudki i uzupełnia wpisy; pozostałe pola wpisów zostają.
+- Nowa instrukcja skrótu „Dziennik sen” (pętla „Powtórz z każdym”).
+
 ## 0.5.0 (2026-11-24) — czerwone flagi, „Kiedy szukać pomocy”, sen ze Zdrowia
 
 ### Dodano

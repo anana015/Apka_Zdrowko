@@ -8,7 +8,7 @@ import * as db from './db.js';
 import { $, $$, h, ikona, toast, ustawRadio, wartoscRadia, dwaDotkniecia } from './utils.js';
 import {
   ymd, dodajDni, formatDzien, formatKrotki, zbudujCzasySnu, godzinySnu, formatGodziny, hhmm,
-  poprzedniWpis, dawkiNaDzien, dzienEpizodu, nazwaEpizodu, czasNaDate, parsujLiczbe, roznicaDni, parsujSenZeSchowka,
+  poprzedniWpis, dawkiNaDzien, dzienEpizodu, nazwaEpizodu, czasNaDate, parsujLiczbe, roznicaDni, parsujSenZeSchowka, parsujNoceZeSchowka,
 } from './obliczenia.js';
 import { pobierzTagi, dodajTag, budujChipy, zaznaczoneChipy, dolaczChip } from './tagi.js';
 import { otworzEpizod, zacznijBol, zakonczBol } from './dolegliwosci.js';
@@ -367,6 +367,12 @@ function zainicjujSenZeZdrowia() {
       stan.textContent = 'Nie udało się odczytać schowka. Zezwól na wklejenie, gdy iPhone zapyta.';
       return;
     }
+    const noce = parsujNoceZeSchowka(tekst).filter((n) => n.dataPobudki <= ymd());
+    if (noce.length > 1) {
+      try { sessionStorage.removeItem(KLUCZ_CZEKAM); } catch { /* brak */ }
+      stan.textContent = await importujNoce(noce);
+      return;
+    }
     const sen = parsujSenZeSchowka(tekst);
     if (!sen) {
       stan.textContent = 'W schowku nie ma godzin snu. Sprawdź skrót „Dziennik sen” (Ustawienia → Sen z aplikacji Zdrowie).';
@@ -382,4 +388,26 @@ function zainicjujSenZeZdrowia() {
     const innyDzien = sen.dataPobudki && sen.dataPobudki !== data;
     stan.textContent = `Wstawiono sen ${sen.zasniecie}–${sen.pobudka}${innyDzien ? ` (pobudka ${formatKrotki(sen.dataPobudki)}, a wpis dotyczy innego dnia; sprawdź datę)` : ''}. Zapisz wpis.`;
   });
+}
+
+/**
+ * Zapis wielu nocy naraz: brakujące dni dostają wpis z samym snem, istniejące — zaktualizowany sen
+ * (pozostałe pola wpisu, np. nastrój i notatka, zostają bez zmian).
+ * @param {ReturnType<typeof parsujNoceZeSchowka>} noce
+ */
+async function importujNoce(noce) {
+  const wpisy = new Map((await db.wszystkie('daily_entries')).map((w) => [w.entry_date, w]));
+  let nowe = 0, zmienione = 0, bezZmian = 0;
+  for (const n of noce) {
+    const w = wpisy.get(n.dataPobudki);
+    if (w && w.sleep_start === n.sleep_start && w.sleep_end === n.sleep_end) { bezZmian++; continue; }
+    await db.zapisz('daily_entries', {
+      ...(w ?? { entry_date: n.dataPobudki, tags: [], note: null }),
+      sleep_start: n.sleep_start, sleep_end: n.sleep_end, sleep_hours: n.godziny,
+    });
+    if (w) zmienione++; else nowe++;
+  }
+  await wypelnijFormularz();
+  const od = formatKrotki(noce[0].dataPobudki), do_ = formatKrotki(noce[noce.length - 1].dataPobudki);
+  return `Wczytano ${noce.length} nocy (${od}–${do_}): nowe wpisy ${nowe}, uzupełnione ${zmienione}, bez zmian ${bezZmian}.`;
 }

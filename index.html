@@ -405,16 +405,17 @@
 
       <section class="sekcja" aria-labelledby="skrot-tytul">
         <h2 id="skrot-tytul">Sen z aplikacji Zdrowie (iPhone)</h2>
-        <p class="drobny">Przycisk „Pobierz sen ze Zdrowia” na ekranie Dziś uruchamia skrót, który kopiuje ostatnią noc z aplikacji Zdrowie. Po powrocie dotykasz „Wklej sen”. Skrót tworzysz raz:</p>
+        <p class="drobny">Przycisk „Pobierz sen ze Zdrowia” na ekranie Dziś uruchamia skrót, który kopiuje sen z ostatnich 14 dni. Po powrocie dotykasz „Wklej sen”, a aplikacja uzupełnia wpisy dla każdego dnia (nastrój i notatki zostają bez zmian). Skrót tworzysz raz w aplikacji <strong>Skróty</strong>, nazwa dokładnie <strong>Dziennik sen</strong>:</p>
         <ol class="punkty">
-          <li>Otwórz aplikację <strong>Skróty</strong>, dotknij <strong>+</strong> i nazwij skrót dokładnie <strong>Dziennik sen</strong>.</li>
-          <li>Dodaj akcję <strong>Znajdź próbki zdrowia</strong> (Find Health Samples): typ <strong>Sen</strong>, data początkowa <strong>w ciągu ostatnich 1 dni</strong>. Dodaj filtr: wartość <strong>nie jest</strong> „W łóżku” i drugi: wartość <strong>nie jest</strong> „Czuwanie”. Sortuj według daty początkowej, od najstarszej.</li>
-          <li>Dodaj <strong>Pobierz element z listy</strong> → <strong>Pierwszy element</strong>, potem <strong>Pobierz szczegóły próbek zdrowia</strong> → <strong>Data początkowa</strong>, potem <strong>Formatuj datę</strong> → format własny <code>yyyy-MM-dd HH:mm</code>.</li>
-          <li>Powtórz dla wyniku z kroku 2: <strong>Ostatni element</strong> → <strong>Data końcowa</strong> → ten sam format.</li>
-          <li>Dodaj akcję <strong>Tekst</strong>: <code>DZIENNIK-SEN;</code>, data z kroku 3, <code>;</code>, data z kroku 4.</li>
-          <li>Dodaj akcję <strong>Kopiuj do schowka</strong>. Przy pierwszym uruchomieniu iPhone zapyta o dostęp do danych snu; zezwól.</li>
+          <li><strong>Znajdź próbki aplikacji Zdrowie</strong>: typ <strong>Sen</strong>, data początkowa <strong>w ciągu ostatnich 14 dni</strong>, sortuj według daty początkowej od najstarszych, <strong>Ograniczenie wyłączone</strong>. Jeśli w aplikacji Zdrowie Twój sen jest zapisany tylko jako „W łóżku”, nie dodawaj filtra „Wartość to nie W łóżku”.</li>
+          <li><strong>Powtórz z każdym</strong> (szukaj: „powtórz”) — wejście: wynik kroku 1.</li>
+          <li>Wewnątrz powtarzania: <strong>Pobierz szczegóły próbki aplikacji Zdrowie</strong> → <strong>Data początkowa</strong> z <strong>Powtarzany element</strong>, potem <strong>Formatuj datę</strong> → Niestandardowy → <code>yyyy-MM-dd HH:mm</code>.</li>
+          <li>Nadal wewnątrz: drugi raz <strong>Pobierz szczegóły</strong> → <strong>Data końcowa</strong>; w polu „z” wybierz zmienną <strong>Powtarzany element</strong>. Potem <strong>Formatuj datę</strong> z tym samym formatem.</li>
+          <li>Nadal wewnątrz: <strong>Tekst</strong> z dwiema niebieskimi zmiennymi <strong>Sformatowana data</strong> (najpierw z kroku 3, potem z kroku 4) i średnikiem między nimi.</li>
+          <li>Pod <strong>Koniec powtarzania</strong>: <strong>Połącz tekst</strong> — wejście <strong>Wyniki powtarzania</strong>, separator <strong>Nowy wiersz</strong>.</li>
+          <li><strong>Kopiuj do schowka</strong>.</li>
         </ol>
-        <p class="drobny">Nazwy akcji mogą się nieco różnić w zależności od wersji iOS. Jeśli coś nie zadziała, sen zawsze możesz wpisać ręcznie.</p>
+        <p class="drobny">Test: uruchom skrót i wklej wynik w Notatkach. Każdy wiersz powinien wyglądać jak <code>2026-11-23 23:12;2026-11-24 06:58</code>. Nazwy akcji mogą się nieco różnić w zależności od wersji iOS.</p>
       </section>
 
       <section class="sekcja" aria-labelledby="pomoc-tytul">
