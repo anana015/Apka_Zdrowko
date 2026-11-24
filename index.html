@@ -322,7 +322,34 @@
 
       <section class="sekcja" aria-labelledby="dokumenty-tytul">
         <h2 id="dokumenty-tytul">Dokumenty</h2>
-        <p class="pusty">Załączniki (PDF, zdjęcia wyników, wypisy) zapiszesz po podłączeniu prywatnego magazynu plików. W tym szkicu dane są tylko na urządzeniu.</p>
+        <p class="drobny">Zdjęcia i PDF-y wyników, wypisów i skierowań (do 10 MB). Pliki są w prywatnym magazynie, widoczne tylko dla Ciebie. Wysyłanie i otwieranie wymaga internetu.</p>
+        <form id="form-dokument" class="dokument-form" novalidate>
+          <div class="pole">
+            <label for="dok-plik">Plik (PDF, JPG, PNG, HEIC)</label>
+            <input type="file" id="dok-plik" accept="application/pdf,image/jpeg,image/png,image/heic,.heic" required>
+          </div>
+          <div class="pola-2">
+            <div class="pole">
+              <label for="dok-rodzaj">Rodzaj</label>
+              <select id="dok-rodzaj">
+                <option value="lab">Wynik badania</option>
+                <option value="visit">Wizyta, wypis</option>
+                <option value="other">Inny</option>
+              </select>
+            </div>
+            <div class="pole">
+              <label for="dok-data">Data dokumentu</label>
+              <input type="date" id="dok-data">
+            </div>
+          </div>
+          <div class="pole">
+            <label for="dok-notatka">Opis <span class="opcjonalne">(opcjonalnie)</span></label>
+            <input type="text" id="dok-notatka" maxlength="200" placeholder="np. morfologia, przychodnia">
+          </div>
+          <button type="submit" class="btn btn-drugorzedny" id="dok-wyslij">Wyślij plik</button>
+          <p class="pasek-zapisu__stan" id="dok-stan" role="status"></p>
+        </form>
+        <ul class="lista" id="dok-lista"></ul>
       </section>
     </section>
 

@@ -9,6 +9,7 @@ import * as db from './db.js';
 import { klient, biezacyUzytkownik } from './auth.js';
 import { KOLUMNY } from './eksport.js';
 import { h, toast } from './utils.js';
+import { usunWszystkiePliki } from './dokumenty.js';
 
 /** Kolejność wysyłki zgodna z kluczami obcymi (najpierw leki i epizody, potem przyjęcia). */
 const TABELE = /** @type {const} */ (['medications', 'symptom_episodes', 'daily_entries', 'medication_intakes', 'lab_results']);
@@ -196,6 +197,8 @@ export function uruchomHarmonogram() {
 export async function usunDaneZSerwera() {
   const u = biezacyUzytkownik();
   if (!u) throw new Error('Najpierw się zaloguj.');
+  await usunWszystkiePliki();
+  { const { error } = await klient.from('documents').delete().eq('user_id', u.id); if (error) throw error; }
   for (const t of [...TABELE].reverse()) {
     const { error } = await klient.from(t).delete().eq('user_id', u.id);
     if (error) throw error;

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 (2026-11-24) — dokumenty
+
+### Dodano
+- Badania → Dokumenty: wysyłanie zdjęć i PDF-ów (do 10 MB; PDF, JPG, PNG, HEIC) do prywatnego bucketu `dokumenty`, ścieżka `{user_id}/{uuid}.{rozszerzenie}`.
+- Lista dokumentów z rodzajem, datą i opisem; otwieranie przez link ważny 60 sekund; usuwanie pliku razem z wpisem.
+- „Usuń moje dane z serwera” usuwa też pliki.
+
+### Ograniczenia
+- Dokumenty wymagają internetu (zgodnie ze specyfikacją, sekcja 11); nie ma miniatur offline ani powiązania pliku z konkretnym wynikiem badania.
+
 ## 0.3.0 (2026-11-24) — logowanie, synchronizacja, zależności z lekami
 
 ### Dodano

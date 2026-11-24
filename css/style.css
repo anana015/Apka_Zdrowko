@@ -566,3 +566,5 @@ th { font-weight: 700; color: var(--tekst-2); }
 #log-kod { font-size: 1.5rem; letter-spacing: 0.3em; text-align: center; font-weight: 700; }
 body.zablokowane .gora, body.zablokowane main, body.zablokowane .nawigacja, body.zablokowane #baner-flag { display: none; }
 .status[data-stan="ok"] .status__kropka { background: var(--ok); }
+
+.dokument-form { background: var(--powierzchnia); border: 1px solid var(--linia); border-radius: var(--r-sredni); padding: 1rem; margin-bottom: 0.75rem; }

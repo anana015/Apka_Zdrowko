@@ -8,6 +8,7 @@ import * as db from './db.js';
 import { $, h, toast, otworzDialog, pokazBlad, dwaDotkniecia } from './utils.js';
 import { ymd, formatKrotki, formatPelny, liczbaPL, parsujLiczbe, pozaZakresem, walidujWynik } from './obliczenia.js';
 import { wykresBadania } from './wykresy.js';
+import { initDokumenty, renderDokumenty } from './dokumenty.js';
 
 export const tytul = 'Badania';
 
@@ -40,6 +41,7 @@ let filtr = '';
 const pole = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ ($(id));
 
 export function init() {
+  initDokumenty();
   $('#badania-dodaj').addEventListener('click', () => otworzBadanie(null));
   $('#badania-filtr').addEventListener('change', (e) => { filtr = /** @type {HTMLSelectElement} */ (e.target).value; render(); });
   const szablon = /** @type {HTMLSelectElement} */ ($('#bad-szablon'));
@@ -58,6 +60,7 @@ export function init() {
 }
 
 export async function render() {
+  renderDokumenty();
   const wyniki = await db.wszystkie('lab_results');
   const nazwy = [...new Set(wyniki.map((w) => w.test_name))].sort((a, b) => a.localeCompare(b, 'pl'));
   if (filtr && !nazwy.includes(filtr)) filtr = '';
