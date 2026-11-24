@@ -6,7 +6,7 @@
  */
 
 /** @typedef {{ id?: string, entry_date: string, sleep_start?: string|null, sleep_end?: string|null, sleep_hours?: number|null, sleep_quality?: number|null, awakenings?: number|null, mood?: number|null, energy?: number|null, stress?: number|null, tags?: string[], note?: string|null }} Wpis */
-/** @typedef {{ id?: string, kind: 'headache'|'migraine'|'other', custom_name?: string|null, started_at: string, ended_at?: string|null, intensity?: number|null, location?: string|null, features?: string[], triggers?: string[], relief?: 'none'|'partial'|'full'|null, note?: string|null }} Epizod */
+/** @typedef {{ id?: string, kind: 'headache'|'migraine'|'back'|'pelvic'|'other', custom_name?: string|null, started_at: string, ended_at?: string|null, intensity?: number|null, location?: string|null, features?: string[], triggers?: string[], relief?: 'none'|'partial'|'full'|null, note?: string|null }} Epizod */
 /** @typedef {{ id?: string, name: string, kind: 'medication'|'supplement', dose_text?: string|null, schedule?: { type: 'daily', times: string[] } | { type: 'as_needed' } | null, start_date?: string|null, end_date?: string|null, active?: boolean, note?: string|null }} Lek */
 /** @typedef {{ id?: string, medication_id: string, taken_at: string, dose_text?: string|null, reason?: string|null, episode_id?: string|null, scheduled_time?: string|null }} Przyjecie */
 
@@ -138,6 +138,8 @@ export const czyBolGlowy = (e) => e.kind === 'headache' || e.kind === 'migraine'
 export function nazwaEpizodu(e) {
   if (e.kind === 'headache') return 'Ból głowy';
   if (e.kind === 'migraine') return 'Migrena';
+  if (e.kind === 'back') return 'Ból kręgosłupa';
+  if (e.kind === 'pelvic') return 'Ból w okolicy intymnej';
   return e.custom_name?.trim() || 'Inna dolegliwość';
 }
 
@@ -286,4 +288,26 @@ export function dawkiNaDzien(leki, data) {
 /** Normalizacja nazwy znacznika. @param {string} t */
 export function normalizujTag(t) {
   return t.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/**
+ * Odczyt snu skopiowanego przez skrót „Dziennik sen” z aplikacji Skróty (iPhone).
+ * Format skrótu: „DZIENNIK-SEN;RRRR-MM-DD GG:MM;RRRR-MM-DD GG:MM”. Akceptuje też dwie godziny w dowolnym tekście.
+ * @param {string} tekst
+ * @returns {{ zasniecie: string, pobudka: string, dataPobudki: string|null }|null}
+ */
+export function parsujSenZeSchowka(tekst) {
+  if (!tekst) return null;
+  const pelne = [...tekst.matchAll(/(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/g)];
+  const n2 = (/** @type {string} */ x) => x.padStart(2, '0');
+  if (pelne.length >= 2) {
+    const [a, b] = [pelne[0], pelne[pelne.length - 1]];
+    return { zasniecie: `${n2(a[2])}:${a[3]}`, pobudka: `${n2(b[2])}:${b[3]}`, dataPobudki: b[1] };
+  }
+  const godziny = [...tekst.matchAll(/\b(\d{1,2})[:.](\d{2})\b/g)].filter((m) => Number(m[1]) < 24 && Number(m[2]) < 60);
+  if (godziny.length >= 2) {
+    const [a, b] = [godziny[0], godziny[godziny.length - 1]];
+    return { zasniecie: `${n2(a[1])}:${a[2]}`, pobudka: `${n2(b[1])}:${b[2]}`, dataPobudki: null };
+  }
+  return null;
 }

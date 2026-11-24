@@ -3,7 +3,7 @@
 import * as db from './db.js';
 import { $, h, ikona } from './utils.js';
 import {
-  ymd, formatDzien, formatMiesiac, formatGodziny, snuZWpisu, dzienEpizodu, nazwaEpizodu, hhmm,
+  ymd, formatDzien, czyBolGlowy, formatMiesiac, formatGodziny, snuZWpisu, dzienEpizodu, nazwaEpizodu, hhmm,
 } from './obliczenia.js';
 import { otworzEpizod } from './dolegliwosci.js';
 
@@ -46,7 +46,7 @@ export async function render() {
   /** @type {Map<string, number>} */
   const bolePoDacie = new Map();
   for (const e of dane.epizody) {
-    if (e.kind === 'other') continue;
+    if (!czyBolGlowy(e)) continue;
     const d = dzienEpizodu(e);
     bolePoDacie.set(d, (bolePoDacie.get(d) ?? 0) + 1);
   }

@@ -142,6 +142,11 @@
             </div>
             <output class="wynik-snu" id="wpis-sen-wynik" for="wpis-zasniecie wpis-pobudka" aria-live="polite"></output>
           </div>
+          <div class="sen-zdrowie" id="sen-zdrowie" hidden>
+            <button type="button" class="btn btn-drugorzedny" id="sen-pobierz">Pobierz sen ze Zdrowia</button>
+            <button type="button" class="btn btn-glowny" id="sen-wklej" hidden>Wklej sen</button>
+            <p class="drobny" id="sen-zdrowie-stan" role="status"></p>
+          </div>
           <div class="pola-snu" data-tryb="liczba" hidden>
             <div class="pole">
               <label for="wpis-godziny">Godziny snu</label>
@@ -215,6 +220,7 @@
           <button type="button" class="btn btn-drugorzedny btn-maly" id="dzis-dodaj-epizod">Dodaj dolegliwość</button>
         </div>
         <ul class="lista" id="dzis-epizody"></ul>
+        <p class="drobny"><a href="#wiedza">Kiedy szukać pomocy: ból głowy, kręgosłupa, okolic intymnych</a></p>
       </section>
     </section>
 
@@ -353,6 +359,12 @@
       </section>
     </section>
 
+    <!-- ===== KIEDY SZUKAĆ POMOCY ===== -->
+    <section class="ekran" id="ekran-wiedza" data-ekran="wiedza" aria-labelledby="wiedza-tytul" hidden>
+      <h1 id="wiedza-tytul" tabindex="-1">Kiedy szukać pomocy</h1>
+      <div id="wiedza-tresc"></div>
+    </section>
+
     <!-- ===== USTAWIENIA ===== -->
     <section class="ekran" id="ekran-ustawienia" data-ekran="ustawienia" aria-labelledby="ustawienia-tytul" hidden>
       <h1 id="ustawienia-tytul" tabindex="-1">Ustawienia</h1>
@@ -389,6 +401,25 @@
         <h2 id="tagi-tytul">Znaczniki dnia</h2>
         <p class="drobny">Usunięcie znacznika z listy nie zmienia zapisanych wpisów.</p>
         <ul class="lista lista--zwarta" id="ustawienia-tagi"></ul>
+      </section>
+
+      <section class="sekcja" aria-labelledby="skrot-tytul">
+        <h2 id="skrot-tytul">Sen z aplikacji Zdrowie (iPhone)</h2>
+        <p class="drobny">Przycisk „Pobierz sen ze Zdrowia” na ekranie Dziś uruchamia skrót, który kopiuje ostatnią noc z aplikacji Zdrowie. Po powrocie dotykasz „Wklej sen”. Skrót tworzysz raz:</p>
+        <ol class="punkty">
+          <li>Otwórz aplikację <strong>Skróty</strong>, dotknij <strong>+</strong> i nazwij skrót dokładnie <strong>Dziennik sen</strong>.</li>
+          <li>Dodaj akcję <strong>Znajdź próbki zdrowia</strong> (Find Health Samples): typ <strong>Sen</strong>, data początkowa <strong>w ciągu ostatnich 1 dni</strong>. Dodaj filtr: wartość <strong>nie jest</strong> „W łóżku” i drugi: wartość <strong>nie jest</strong> „Czuwanie”. Sortuj według daty początkowej, od najstarszej.</li>
+          <li>Dodaj <strong>Pobierz element z listy</strong> → <strong>Pierwszy element</strong>, potem <strong>Pobierz szczegóły próbek zdrowia</strong> → <strong>Data początkowa</strong>, potem <strong>Formatuj datę</strong> → format własny <code>yyyy-MM-dd HH:mm</code>.</li>
+          <li>Powtórz dla wyniku z kroku 2: <strong>Ostatni element</strong> → <strong>Data końcowa</strong> → ten sam format.</li>
+          <li>Dodaj akcję <strong>Tekst</strong>: <code>DZIENNIK-SEN;</code>, data z kroku 3, <code>;</code>, data z kroku 4.</li>
+          <li>Dodaj akcję <strong>Kopiuj do schowka</strong>. Przy pierwszym uruchomieniu iPhone zapyta o dostęp do danych snu; zezwól.</li>
+        </ol>
+        <p class="drobny">Nazwy akcji mogą się nieco różnić w zależności od wersji iOS. Jeśli coś nie zadziała, sen zawsze możesz wpisać ręcznie.</p>
+      </section>
+
+      <section class="sekcja" aria-labelledby="pomoc-tytul">
+        <h2 id="pomoc-tytul">Kiedy szukać pomocy</h2>
+        <p><a href="#wiedza">Objawy alarmowe i informacje o bólu głowy, kręgosłupa i okolic intymnych</a></p>
       </section>
 
       <section class="sekcja" aria-labelledby="przypomnienia-tytul">
@@ -488,6 +519,8 @@
         <div class="wybor-pionowy">
           <label class="opcja"><input type="radio" name="kind" value="headache" checked><span>Ból głowy</span></label>
           <label class="opcja"><input type="radio" name="kind" value="migraine"><span>Migrena <span class="opcjonalne">(Twoja etykieta, nie rozpoznanie)</span></span></label>
+          <label class="opcja"><input type="radio" name="kind" value="back"><span>Ból kręgosłupa</span></label>
+          <label class="opcja"><input type="radio" name="kind" value="pelvic"><span>Ból w okolicy intymnej lub podbrzusza</span></label>
           <label class="opcja"><input type="radio" name="kind" value="other"><span>Inna dolegliwość</span></label>
         </div>
       </fieldset>
@@ -519,10 +552,7 @@
       <div class="pole">
         <label for="ep-lokalizacja">Gdzie boli</label>
         <input type="text" id="ep-lokalizacja" list="lista-lokalizacji" maxlength="60">
-        <datalist id="lista-lokalizacji">
-          <option value="Czoło"></option><option value="Skronie"></option><option value="Potylica"></option>
-          <option value="Jedna strona głowy"></option><option value="Cała głowa"></option><option value="Za okiem"></option>
-        </datalist>
+        <datalist id="lista-lokalizacji"></datalist>
       </div>
 
       <fieldset class="pole">
@@ -532,8 +562,8 @@
 
       <fieldset class="pole pole--alarm">
         <legend>Objawy wymagające pilnej pomocy</legend>
-        <p class="drobny">Zaznacz, jeśli coś z tego występuje. Aplikacja pokaże wtedy numery pomocy.</p>
-        <div class="wybor-pionowy" id="ep-alarmowe"></div>
+        <p class="drobny">Zaznacz, jeśli coś z tego występuje. Aplikacja pokaże wtedy, gdzie szukać pomocy. <a href="#wiedza" data-zamknij>Więcej o objawach alarmowych</a></p>
+        <div id="ep-alarmowe"></div>
       </fieldset>
 
       <fieldset class="pole">

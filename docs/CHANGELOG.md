@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 (2026-11-24) — czerwone flagi, „Kiedy szukać pomocy”, sen ze Zdrowia
+
+### Dodano
+- Lista objawów alarmowych 1.0.0 sprawdzona ze źródłami (NHS: headaches, back-pain, pelvic-pain, testicle-pain, ectopic-pregnancy; NICE CG150): trzy obszary (ból głowy, kręgosłupa, okolice intymne i podbrzusze) i dwa poziomy (112/SOR albo kontakt z lekarzem jeszcze dziś).
+- Baner w dwóch wariantach: czerwony (112, SOR) i spokojniejszy (lekarz jeszcze dziś), z linkiem do informacji.
+- Ekran „Kiedy szukać pomocy” (`#wiedza`): objawy alarmowe, częste rodzaje bólu (do rozmowy z lekarzem, bez diagnozy), kiedy umówić wizytę, co zapisywać, źródła.
+- Nowe rodzaje dolegliwości: ból kręgosłupa i ból w okolicy intymnej lub podbrzusza; objawy alarmowe i podpowiedzi lokalizacji dobierane do rodzaju.
+- Migracja `0004_rodzaje_dolegliwosci.sql` (nowe wartości `kind`).
+- iPhone: przycisk „Pobierz sen ze Zdrowia” uruchamia skrót „Dziennik sen”, a „Wklej sen” wstawia godziny ze schowka. Instrukcja budowy skrótu w Ustawieniach.
+
 ## 0.4.0 (2026-11-24) — dokumenty
 
 ### Dodano

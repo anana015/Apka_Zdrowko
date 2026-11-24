@@ -14,12 +14,13 @@ import * as wykresy from './wykresy.js';
 import * as leki from './leki.js';
 import * as badania from './badania.js';
 import * as ustawienia from './ustawienia.js';
+import * as wiedza from './wiedza.js';
 import { zainicjujEpizody } from './dolegliwosci.js';
 import { skonfigurowano, zainicjujLogowanie, zdarzeniaAuth } from './auth.js';
 import { startSynchronizacji, uruchomHarmonogram } from './synchronizacja.js';
 
 /** @type {Record<string, { init?: () => void, render: (p: URLSearchParams) => Promise<void>|void, odswiez?: () => Promise<void>|void, tytul: string }>} */
-const EKRANY = { dzis, historia, wykresy, leki, badania, ustawienia };
+const EKRANY = { dzis, historia, wykresy, leki, badania, ustawienia, wiedza };
 
 /** @type {string|null} */
 let aktywny = null;
@@ -75,10 +76,18 @@ async function odswiezFlagi() {
     class: `btn ${drugorzedny ? 'btn-drugorzedny' : ''}`, href: `tel:${n.numer.replace(/\s/g, '')}`,
   }, ikona('tel'), etykieta);
 
-  const tresc = h('div', { class: 'baner-flag__tresc', role: 'alert' });
+  const tylkoLekarz = !wynik.pilne && !wynik.kryzys;
+  const tresc = h('div', { class: `baner-flag__tresc${tylkoLekarz ? ' baner-flag__tresc--lekarz' : ''}`, role: 'alert' });
+  if (tylkoLekarz) {
+    tresc.append(
+      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Skontaktuj się jeszcze dziś z lekarzem' })),
+      h('p', { text: 'W dzień: przychodnia POZ (także teleporada). Wieczorem, w nocy i w święta: nocna i świąteczna opieka zdrowotna. Jeśli objawy się nasilą, dzwoń pod 112.' }),
+    );
+  }
   if (wynik.pilne) {
     tresc.append(
-      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Skontaktuj się pilnie z lekarzem lub zadzwoń pod 112' })),
+      h('p', { class: 'baner-flag__tytul' }, ikona('alarm'), h('span', { text: 'Zadzwoń pod 112 albo jedź na SOR' })),
+      h('p', { text: 'Nie prowadź samochodu samodzielnie: poproś kogoś o podwiezienie albo wezwij karetkę.' }),
     );
   }
   if (wynik.kryzys) {
@@ -90,11 +99,12 @@ async function odswiezFlagi() {
   tresc.append(
     h('ul', {}, wynik.flagi.map((f) => h('li', { text: f.etykieta }))),
     h('div', { class: 'przyciski' },
-      tel(NUMERY.alarmowy, 'Zadzwoń pod 112'),
+      tel(NUMERY.alarmowy, 'Zadzwoń pod 112', tylkoLekarz),
       wynik.kryzys ? tel(NUMERY.centrumWsparcia, `Centrum Wsparcia ${NUMERY.centrumWsparcia.numer}`, true) : null,
       wynik.kryzys ? tel(NUMERY.telefonZaufania, `Telefon zaufania ${NUMERY.telefonZaufania.numer}`, true) : null,
     ),
-    h('p', { class: 'drobny', text: 'Baner pojawia się na podstawie Twoich wpisów z ostatnich 48 godzin. To pomoc, nie gwarancja: jeśli dzieje się coś niepokojącego, dzwoń niezależnie od tego, co pokazuje aplikacja.' }),
+    h('p', { class: 'drobny' }, 'Baner pojawia się na podstawie Twoich wpisów z ostatnich 48 godzin. To pomoc, nie gwarancja: jeśli dzieje się coś niepokojącego, dzwoń niezależnie od tego, co pokazuje aplikacja. ',
+      h('a', { href: '#wiedza', text: 'Kiedy szukać pomocy' })),
   );
   baner.replaceChildren(tresc);
   baner.hidden = false;

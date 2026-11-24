@@ -1,7 +1,7 @@
 // @ts-check
 /** Stałe teksty i konfiguracja aplikacji. */
 
-export const WERSJA_APLIKACJI = '0.4.0';
+export const WERSJA_APLIKACJI = '0.5.0';
 
 /** Zastrzeżenie medyczne (specyfikacja, sekcja 2) — przy pierwszym uruchomieniu i w stopce Wykresów. */
 export const ZASTRZEZENIE = 'Aplikacja służy do prowadzenia własnych notatek i nie jest wyrobem medycznym. ' +

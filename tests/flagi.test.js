@@ -29,6 +29,6 @@ test('baner tylko dla zdarzeń z ostatnich 48 h', () => {
   assert.equal(a.kryzys, true);
 });
 
-test('lista flag jest oznaczona jako niezweryfikowana (przypomnienie przed publikacją)', () => {
-  assert.equal(ZWERYFIKOWANO, false);
+test('lista flag jest sprawdzona ze źródłami', () => {
+  assert.equal(ZWERYFIKOWANO, true);
 });

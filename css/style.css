@@ -568,3 +568,17 @@ body.zablokowane .gora, body.zablokowane main, body.zablokowane .nawigacja, body
 .status[data-stan="ok"] .status__kropka { background: var(--ok); }
 
 .dokument-form { background: var(--powierzchnia); border: 1px solid var(--linia); border-radius: var(--r-sredni); padding: 1rem; margin-bottom: 0.75rem; }
+
+/* ---------- Wiedza i sen ze Zdrowia ---------- */
+.wiedza-spis { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+.wiedza-temat h3 { margin-top: 1rem; }
+.wiedza-pilne { border-left: 4px solid var(--alarm); background: var(--alarm-tlo); color: var(--alarm-tekst); border-radius: 0 var(--r-sredni) var(--r-sredni) 0; padding: 0.75rem 1rem; margin: 0.75rem 0; }
+.wiedza-lekarz { border-left: 4px solid var(--swit); background: var(--powierzchnia); border-radius: 0 var(--r-sredni) var(--r-sredni) 0; padding: 0.75rem 1rem; margin: 0.75rem 0; }
+.wiedza-pilne ul, .wiedza-lekarz ul { margin: 0.25rem 0 0.5rem; padding-left: 1.25rem; }
+.wiedza-pilne .drobny { color: inherit; }
+.grupa-alarmowa + .grupa-alarmowa { margin-top: 0.75rem; }
+.grupa-alarmowa h3 { font-size: 0.9375rem; margin: 0.5rem 0 0.25rem; }
+.sen-zdrowie { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
+.sen-zdrowie p { flex-basis: 100%; margin: 0; }
+.baner-flag__tresc--lekarz { background: var(--powierzchnia); color: var(--tekst); border-color: var(--swit); }
+.baner-flag__tresc--lekarz .baner-flag__tytul .ikona { color: var(--swit); }

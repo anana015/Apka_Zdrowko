@@ -8,7 +8,7 @@ import * as db from './db.js';
 import { $, $$, h, ikona, toast, ustawRadio, wartoscRadia, dwaDotkniecia } from './utils.js';
 import {
   ymd, dodajDni, formatDzien, formatKrotki, zbudujCzasySnu, godzinySnu, formatGodziny, hhmm,
-  poprzedniWpis, dawkiNaDzien, dzienEpizodu, nazwaEpizodu, czasNaDate, parsujLiczbe, roznicaDni,
+  poprzedniWpis, dawkiNaDzien, dzienEpizodu, nazwaEpizodu, czasNaDate, parsujLiczbe, roznicaDni, parsujSenZeSchowka,
 } from './obliczenia.js';
 import { pobierzTagi, dodajTag, budujChipy, zaznaczoneChipy, dolaczChip } from './tagi.js';
 import { otworzEpizod, zacznijBol, zakonczBol } from './dolegliwosci.js';
@@ -115,6 +115,7 @@ export function init() {
     location.hash = nast >= ymd() ? '#dzis' : `#dzis?data=${nast}`;
   });
   $('#dzis-dodaj-epizod').addEventListener('click', () => otworzEpizod(null, { data }));
+  zainicjujSenZeZdrowia();
   $('#dzis-dorazny').addEventListener('click', () => otworzPrzyjecie({ data }));
 }
 
@@ -330,4 +331,55 @@ function renderEpizody({ epizody }) {
         e.intensity != null ? h('span', { class: 'znacznik znacznik--bol', text: `${e.intensity}/10` }) : null),
       h('p', { class: 'lista__opis', text: e.ended_at ? `${hhmm(e.started_at)}–${hhmm(e.ended_at)}` : `od ${hhmm(e.started_at)}, trwa` })),
     h('button', { type: 'button', class: 'btn btn-drugorzedny btn-maly', text: 'Edytuj', 'aria-label': `Edytuj: ${nazwaEpizodu(e)} od ${hhmm(e.started_at)}`, on: { click: () => otworzEpizod(e.id) } }))));
+}
+
+// ---------- Sen z aplikacji Zdrowie (iPhone, przez aplikację Skróty) ----------
+const KLUCZ_CZEKAM = 'dziennik:czekamNaSen';
+const NAZWA_SKROTU = 'Dziennik sen';
+
+function zainicjujSenZeZdrowia() {
+  const naIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!naIOS) return;
+  $('#sen-zdrowie').hidden = false;
+  const stan = $('#sen-zdrowie-stan');
+  const wklej = $('#sen-wklej');
+  const czeka = () => { try { return sessionStorage.getItem(KLUCZ_CZEKAM) === '1'; } catch { return false; } };
+
+  $('#sen-pobierz').addEventListener('click', () => {
+    try { sessionStorage.setItem(KLUCZ_CZEKAM, '1'); } catch { /* brak */ }
+    wklej.hidden = false;
+    stan.textContent = 'Po powrocie ze Skrótów dotknij „Wklej sen”.';
+    location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(NAZWA_SKROTU)}`;
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && czeka()) {
+      wklej.hidden = false;
+      stan.textContent = 'Dotknij „Wklej sen”, aby wstawić godziny z aplikacji Zdrowie.';
+    }
+  });
+
+  wklej.addEventListener('click', async () => {
+    let tekst = '';
+    try {
+      tekst = await navigator.clipboard.readText();
+    } catch {
+      stan.textContent = 'Nie udało się odczytać schowka. Zezwól na wklejenie, gdy iPhone zapyta.';
+      return;
+    }
+    const sen = parsujSenZeSchowka(tekst);
+    if (!sen) {
+      stan.textContent = 'W schowku nie ma godzin snu. Sprawdź skrót „Dziennik sen” (Ustawienia → Sen z aplikacji Zdrowie).';
+      return;
+    }
+    const form = /** @type {HTMLFormElement} */ ($('#form-wpis'));
+    ustawRadio(form, 'tryb_snu', 'czasy');
+    /** @type {HTMLInputElement} */ ($('#wpis-zasniecie')).value = sen.zasniecie;
+    /** @type {HTMLInputElement} */ ($('#wpis-pobudka')).value = sen.pobudka;
+    pokazTrybSnu();
+    oznaczZmiany();
+    try { sessionStorage.removeItem(KLUCZ_CZEKAM); } catch { /* brak */ }
+    const innyDzien = sen.dataPobudki && sen.dataPobudki !== data;
+    stan.textContent = `Wstawiono sen ${sen.zasniecie}–${sen.pobudka}${innyDzien ? ` (pobudka ${formatKrotki(sen.dataPobudki)}, a wpis dotyczy innego dnia; sprawdź datę)` : ''}. Zapisz wpis.`;
+  });
 }
